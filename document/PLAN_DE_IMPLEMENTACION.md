@@ -19,6 +19,18 @@ Este documento convierte el enunciado, el backlog, el anexo y el diagrama en un 
 - Mantener la arquitectura en capas **MVC**, como exige el enunciado; el diagrama de arquitectura debe mostrar cómo se separan la interfaz JavaFX, las reglas de aplicación/negocio y el acceso a MySQL.
 - La decisión elimina las alternativas Web, API como producto principal y base no relacional. Los endpoints del backlog siguen siendo opcionales y no forman parte del alcance salvo que se acuerde una API adicional.
 
+## Cómo usar el proyecto guía
+
+El repositorio de referencia `web-2026 (guia)` contiene un backoffice principalmente **web**, no una aplicación de escritorio JavaFX. Su backend más completo usa Maven/Java 17 y separa módulos `api`, `commons`, `core` y `security` (`proyecto base/backoffice-itec-master/pom.xml:17-27`). El README de ese backend describe React, PostgreSQL, JWT/Spring Security y MVC (`proyecto base/backoffice-itec-master/README.md:91-99`).
+
+| Tomar como referencia | Adaptar al objetivo de este proyecto | No copiar sin validar |
+| --- | --- | --- |
+| Separación de responsabilidades y flujo servicio → repositorio → modelo; por ejemplo `AlumnoServiceImpl` usa `AlumnoRepository` (`proyecto base/backoffice-itec-master/backoffice-itec-core/src/main/java/ar/edu/itec1misiones/service/impl/AlumnoServiceImpl.java:9-29`). | Usar JavaFX para la interfaz y sus controladores; mantener reglas académicas en servicios y persistencia detrás de repositorios, conectados a MySQL. | No trasladar React, REST ni los controladores Spring: no corresponden al producto de escritorio elegido. |
+| Vocabulario y entidades académicas existentes: `Alumno`, `Profesor`, `Materia`, `Asistencia`, `Nota` y `AlumnoInscripto`; asistencia se relaciona con inscripción y horario (`proyecto base/backoffice-itec-master/backoffice-itec-core/src/main/java/ar/edu/itec1misiones/model/Asistencia.java:7-26`). | Comparar esas entidades con las historias y el diagrama fuente; conservar solo las que representen reglas acordadas y completar relaciones/campos faltantes. | No considerar una clase/modelo o una lista del README como prueba de que el flujo funcional está implementado. |
+| Perfiles de configuración y pruebas del proyecto guía como ejemplos para estudiar. | Definir configuración propia para MySQL y pruebas de comportamiento de cada regla y criterio `TC-*`. | El README menciona PostgreSQL, pero el perfil de desarrollo observado configura H2 (`proyecto base/backoffice-itec-master/backoffice-itec-api/src/main/resources/application-dev.yml:1-15`); las pruebas observadas son limitadas. No reutilizar esa configuración como verdad para este sistema. |
+
+**Conclusión:** el proyecto guía sirve para orientar el vocabulario del dominio y la separación por capas, no para copiar su plataforma ni asumir que ya resuelve las reglas. JavaFX + MySQL siguen siendo la arquitectura objetivo; el alcance se verifica contra los documentos del ITEC y pruebas propias.
+
 ## Inventario de documentación y entregables pendientes
 
 Este inventario refleja el estado observado del repositorio al revisar los requisitos. Los archivos DOCX y el JPEG son **fuentes**; no cuentan como reemplazo de los entregables finales.
