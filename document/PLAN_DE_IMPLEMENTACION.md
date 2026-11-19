@@ -13,25 +13,49 @@ Este documento convierte el enunciado, el backlog, el anexo y el diagrama en un 
 
 **Convención:** «obligatorio» significa indicado en el enunciado o una historia; «sugerido/opcional» conserva esa condición de la fuente. Las decisiones abiertas se acuerdan antes de programar su comportamiento. Los endpoints del backlog están marcados «opcionales si API»: no obligan a elegir una API ni a implementar esas rutas si se elige otra plataforma.
 
+## Decisión técnica confirmada
+
+- Aplicación de escritorio en **Java**, con **JavaFX** para la interfaz y **MySQL** como base de datos.
+- Mantener la arquitectura en capas **MVC**, como exige el enunciado; el diagrama de arquitectura debe mostrar cómo se separan la interfaz JavaFX, las reglas de aplicación/negocio y el acceso a MySQL.
+- La decisión elimina las alternativas Web, API como producto principal y base no relacional. Los endpoints del backlog siguen siendo opcionales y no forman parte del alcance salvo que se acuerde una API adicional.
+
+## Inventario de documentación y entregables pendientes
+
+Este inventario refleja el estado observado del repositorio al revisar los requisitos. Los archivos DOCX y el JPEG son **fuentes**; no cuentan como reemplazo de los entregables finales.
+
+| Entregable | Estado actual | Mínimo para darlo por terminado |
+| --- | --- | --- |
+| `README.md` | Existe, pero solo tiene el título del repositorio. | Describir objetivo y alcance, integrantes, Java/JavaFX/MySQL, requisitos previos, configuración sin secretos, instalación/compilación, pruebas, ejecución de la app de escritorio y de MySQL con Docker; enlazar el script SQL y los diagramas finales. |
+| Diagrama de arquitectura | No encontrado. | Mostrar MVC y los componentes/conexiones reales de la app JavaFX de escritorio y MySQL. |
+| Diagrama de clases | No encontrado. | Representar clases, responsabilidades y relaciones implementadas, no solo entidades del boceto. |
+| Diagrama de secuencia | No encontrado. | Mostrar al menos el flujo principal elegido, participantes y llamadas en orden; elegir el caso luego de definir la interfaz y los flujos. |
+| Diagrama de estados académicos | No encontrado. | Mostrar estados, transiciones y condiciones de cambio del alumno/cursada según las reglas académicas acordadas. |
+| Diagrama del modelo de datos | No encontrado. | Mostrar entidades/tablas, identificadores, relaciones y cardinalidades coherentes con la persistencia final. |
+| Script SQL | No encontrado. | Crear el esquema reproducible de MySQL que exige el enunciado y verificarlo desde una base vacía. |
+| Ejecución con Docker | No se encontraron `Dockerfile` ni archivo Compose. | Documentar y verificar MySQL en Docker y cómo se conecta la app JavaFX. Acordar si el requisito de Docker exige contenerizar también la interfaz gráfica o si alcanza con la base en contenedor y la app ejecutada en el escritorio anfitrión. |
+| Boceto `backoffice-itec.jpeg` | Existe; es conceptual e incompleto. | Conservarlo como fuente y actualizarlo o reemplazarlo por diagramas finales coherentes. No usarlo como modelo de datos definitivo. |
+| DOCX de enunciado, backlog y anexo | Existen en `document/`; son fuentes del proyecto. | Mantenerlos como referencias originales; no hace falta duplicar su contenido en nuevos documentos. |
+
+Los diagramas deben quedar en `document/`, como pide el enunciado. El formato y el nombre de los archivos quedan abiertos hasta elegir una herramienta; deben poder revisarse desde el repositorio y coincidir entre sí y con el sistema. La distinción entre roles, las reglas de negocio y el alcance de Docker siguen pendientes y afectan el README y los diagramas. La documentación de API no está en el alcance confirmado; las rutas del backlog son ejemplos opcionales.
+
 ## Definiciones pendientes antes de implementar
 
-- [ ] Elegir Web, Desktop o API + cliente; el enunciado permite las tres, pero exige Java y arquitectura en capas MVC. Definir cómo se usará la aplicación de punta a punta.
-- [ ] Elegir base relacional o no relacional y su esquema; el enunciado exige **script SQL**, por lo que si se elige una base no relacional hay que aclarar qué cubrirá ese entregable antes de avanzar.
 - [ ] Aclarar si «Administrador» y «Administrativo» son roles diferentes o el mismo; el enunciado enumera ambos, mientras el backlog usa `ADM`. Definir quién crea cuentas y cómo se asignan roles.
 - [ ] Definir identidad y reglas de cada cursada: carrera, plan de estudios, materia, cuatrimestre/semestre, comisión y período. Precisar qué significa «no duplicar inscripción» y si un alumno puede recursar una materia en otra comisión o período.
 - [ ] Fijar escala, redondeo y cálculo de calificaciones: el backlog propone `0..10` y aprobación con nota **mayor o igual a 6**; el anexo permite elegir si el recuperatorio reemplaza o promedia, y llama «configurable» al promedio. Definir promoción, parciales requeridos, cantidad de recuperatorios y relación entre regularidad y aprobación.
 - [ ] Definir el denominador del 70 % de asistencia (clases registradas, justificadas y ausencia de clases), el efecto exacto de justificar una falta, y cuándo se recalcula o congela la regularidad.
 - [ ] Definir el procedimiento de reapertura/corrección extraordinaria de actas y asistencia cerradas, con permisos y auditoría; el anexo prohíbe editar actas cerradas y reserva el desbloqueo a `ADM`.
-- [ ] Definir integrantes, entorno de ejecución, estrategia de despliegue en Docker y datos de ejemplo para la entrega.
+- [ ] Definir si Docker ejecutará solo MySQL o también la aplicación JavaFX; acordar cómo se mostrará la interfaz si debe ejecutarse dentro de un contenedor.
+- [ ] Definir integrantes, entorno de ejecución y datos de ejemplo para la entrega.
 
 ## Plan de trabajo, en orden de dependencias
 
 ### 1. Base técnica y modelo académico
 
-- [ ] Sustituir el ejemplo `Hello World!` por un proyecto ejecutable con capas claras de presentación, aplicación/negocio y persistencia (MVC), sin atar reglas de negocio a la interfaz. Mantener Java y Maven.
-- [ ] Diseñar y crear el esquema persistente, relaciones, claves, restricciones y migración/creación reproducible; entregar el **script SQL obligatorio** y datos mínimos de demostración. Proteger historial en bajas lógicas.
+- [ ] Sustituir el ejemplo `Hello World!` por una aplicación de escritorio JavaFX, con capas claras MVC de presentación, aplicación/negocio y persistencia; mantener Java y Maven y no atar reglas de negocio a la interfaz.
+- [ ] Diseñar y crear el esquema MySQL persistente, relaciones, claves, restricciones y creación reproducible; entregar el **script SQL obligatorio** y proteger historial en bajas lógicas.
 - [ ] Modelar alumnos, docentes, materias, correlativas, carreras, planes, semestres, comisiones, horarios, clases, inscripciones, asistencias, evaluaciones, calificaciones, actas y auditoría según las funciones acordadas. Validar cardinalidades y nombres antes de copiar la imagen al código.
-- [ ] Habilitar configuración externa del entorno (conexión a datos y secretos), manejo de errores y ejecución local reproducible. No guardar contraseñas ni credenciales en el repositorio.
+- [ ] Habilitar configuración externa del entorno (conexión de JavaFX a MySQL y secretos), manejo de errores y ejecución local reproducible. No guardar contraseñas ni credenciales en el repositorio.
 
 ### 2. Acceso y catálogos académicos
 
