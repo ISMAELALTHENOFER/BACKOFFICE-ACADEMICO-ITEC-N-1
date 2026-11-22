@@ -1,0 +1,136 @@
+@startuml clases-diseno
+!pragma layout smetana
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+title Diagrama de clases de diseño - controladores, servicios y persistencia
+left to right direction
+
+package "controller" {
+  class AuthController {
+    + login() : void
+  }
+  class InscripcionController {
+    + buscarAlumno() : void
+    + inscribir() : void
+  }
+  class AsistenciaController {
+    + seleccionarHorario() : void
+    + guardar() : void
+  }
+  class ActaController {
+    + registrarFinal() : void
+    + cerrarActa() : void
+  }
+}
+
+package "security" {
+  class Sesion {
+    - user : User
+    + iniciar(u : User) : void
+    + usuarioActual() : User
+    + cerrar() : void
+  }
+  class PasswordEncoder {
+    + encode(clave : char[]) : String
+    + matches(clave : char[], hash : String) : boolean
+  }
+  class Autorizador {
+    + exigirRol(roles : Rol...) : void
+    + exigirProfesorDeComision(comisionId : Long) : void
+  }
+}
+
+package "service" {
+  interface AuthService {
+    + login(username : String, clave : char[]) : User
+  }
+  interface AlumnoService {
+    + crear(request : AlumnoRequest) : AlumnoResponse
+    + buscarPorDni(dni : String) : AlumnoResponse
+    + modificar(id : Long, request : AlumnoRequest) : AlumnoResponse
+    + darDeBaja(id : Long) : void
+    + inscribirEnCarrera(alumnoId : Long, planId : Long, anioIngreso : int) : void
+  }
+  interface InscripcionService {
+    + inscribir(alumnoCarreraId : Long, comisionId : Long) : AlumnoInscripto
+  }
+  interface AsistenciaService {
+    + registrar(horarioId : Long, fecha : LocalDate, marcas : Map<Long, EstadoAsistencia>) : void
+    + justificar(asistenciaId : Long, motivo : String, certificado : String) : void
+    + cerrar(comisionId : Long) : void
+  }
+  interface NotaService {
+    + registrar(inscriptoId : Long, examenId : Long, valor : BigDecimal) : Nota
+    + modificar(notaId : Long, valor : BigDecimal) : Nota
+    + registrarFinal(actaId : Long, inscriptoId : Long, valor : BigDecimal) : Nota
+  }
+  interface ActaService {
+    + cerrar(actaId : Long) : void
+    + reabrir(actaId : Long, motivo : String) : void
+  }
+  interface AuditoriaService {
+    + registrar(accion : String, entidad : String, id : Long, anterior : String, nuevo : String, motivo : String) : void
+  }
+}
+
+package "service.impl" {
+  class InscripcionServiceImpl
+  class AsistenciaServiceImpl
+  class NotaServiceImpl
+}
+
+package "rule" {
+  class CalculadoraRegularidad {
+    + {static} UMBRAL : BigDecimal = 70
+    + porcentaje(asistencias : List<Asistencia>, clasesDictadas : int) : BigDecimal
+    + esRegular(porcentaje : BigDecimal) : boolean
+  }
+  class CalculadoraCondicion {
+    + promedio(notas : List<Nota>) : BigDecimal
+    + estadoDeCursada(porcentaje : BigDecimal, promedio : BigDecimal) : EstadoCursada
+    + resultadoFinal(valor : BigDecimal) : EstadoCursada
+  }
+  class ValidadorCorrelativas {
+    + faltantes(alumnoId : Long, materiaId : Long) : List<Materia>
+  }
+}
+
+package "repository" {
+  interface UserRepository
+  interface AlumnoInscriptoRepository
+  interface AsistenciaRepository
+  interface NotaRepository
+  interface ActaFinalRepository
+}
+
+AuthController --> AuthService
+InscripcionController --> InscripcionService
+AsistenciaController --> AsistenciaService
+ActaController --> NotaService
+ActaController --> ActaService
+AuthService ..> PasswordEncoder
+AuthService ..> Sesion
+AuthService ..> UserRepository
+InscripcionServiceImpl ..|> InscripcionService
+AsistenciaServiceImpl ..|> AsistenciaService
+NotaServiceImpl ..|> NotaService
+InscripcionServiceImpl --> Autorizador
+InscripcionServiceImpl --> ValidadorCorrelativas
+InscripcionServiceImpl --> AlumnoInscriptoRepository
+AsistenciaServiceImpl --> Autorizador
+AsistenciaServiceImpl --> CalculadoraRegularidad
+AsistenciaServiceImpl --> AsistenciaRepository
+AsistenciaServiceImpl --> AuditoriaService
+NotaServiceImpl --> CalculadoraCondicion
+NotaServiceImpl --> NotaRepository
+NotaServiceImpl --> AuditoriaService
+ActaService ..> ActaFinalRepository
+ActaService ..> AuditoriaService
+
+note bottom of InscripcionServiceImpl
+  Cada servicio es una interfaz XService con su
+  implementación XServiceImpl (solo se muestran tres).
+  Los repositorios son interfaces; su implementación
+  depende de la variante (escritorio o web).
+end note
+@enduml

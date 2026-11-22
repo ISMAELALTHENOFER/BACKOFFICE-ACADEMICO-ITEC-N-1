@@ -1,0 +1,34 @@
+@startuml ds-registrar-nota-final
+skinparam shadowing false
+title DS - registrarNotaFinal(inscriptoId, valor)
+actor Profesor
+participant ":ActaController" as C
+participant ":NotaServiceImpl" as S
+participant ":ActaFinalRepository" as AC
+participant ":Autorizador" as AU
+participant ":AlumnoInscriptoRepository" as IR
+participant ":ValidadorCorrelativas" as V
+participant ":NotaRepository" as NR
+
+Profesor -> C : registrarFinal()
+C -> S : registrarFinal(actaId, inscriptoId, valor)
+S -> AC : findById(actaId)
+AC --> S : acta (examen FINAL y comisión)
+S -> S : validar acta ABIERTA y valor en 0..10
+S -> AU : exigirProfesorDeComision(comisionId)
+S -> IR : findById(inscriptoId)
+IR --> S : inscripto
+S -> S : validar estado REGULAR
+S -> V : faltantes(alumnoId, materiaId)
+V --> S : List<Materia>
+alt habilitado
+  create participant "n:Nota" as N
+  S -> N : new Nota(inscripto, examenFinal, valor)
+  S -> NR : save(n)
+  S --> C : n
+  C --> Profesor : confirmación
+else no habilitado
+  S --> C : ReglaNegocioException(detalle)
+  C --> Profesor : motivo del rechazo
+end
+@enduml

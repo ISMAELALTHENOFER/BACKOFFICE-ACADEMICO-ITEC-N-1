@@ -24,3 +24,9 @@ hs_err_pid*
 replay_pid*
 /BackOffice/target/
 /.atl/
+
+# Python
+__pycache__/
+
+# Archivos temporales de Office
+~$*

@@ -1,0 +1,39 @@
+@startuml ds-cerrar-acta
+skinparam shadowing false
+title DS - cerrarActa(actaId)
+actor Profesor
+participant ":ActaController" as C
+participant ":ActaServiceImpl" as S
+participant ":Autorizador" as AU
+participant ":ActaFinalRepository" as AC
+participant ":AlumnoInscriptoRepository" as IR
+participant ":NotaRepository" as NR
+participant ":CalculadoraCondicion" as CC
+participant ":AuditoriaService" as AUD
+
+Profesor -> C : cerrarActa()
+C -> S : cerrar(actaId)
+S -> AC : findById(actaId)
+AC --> S : acta
+S -> AU : exigirProfesorDeComision(comisionId)
+S -> IR : findRegularesByComision(comisionId)
+IR --> S : inscriptos
+S -> NR : findByExamen(examenFinalId)
+NR --> S : notas finales
+alt todos los inscriptos tienen nota
+  group transacción
+    loop por cada inscripto
+      S -> CC : resultadoFinal(valor)
+      CC --> S : APROBADO | DESAPROBADO
+      S -> IR : actualizarEstado(inscriptoId, estado, notaFinal)
+    end
+    S -> AC : marcarCerrada(actaId, usuario, fecha)
+    S -> AUD : registrar("CIERRE_ACTA", "acta_final", actaId, "ABIERTA", "CERRADA", null)
+  end
+  S --> C : ok
+  C --> Profesor : acta cerrada
+else faltan notas
+  S --> C : ReglaNegocioException(alumnos sin nota)
+  C --> Profesor : lista de pendientes
+end
+@enduml

@@ -1,0 +1,18 @@
+@startuml dss-inscribir-alumno
+skinparam shadowing false
+title DSS - UC-08 Inscribir alumno a comisión
+actor "Administrativo" as U
+participant ":Sistema" as S
+U -> S : buscarAlumno(dni)
+S --> U : datos del alumno, estado y carreras
+U -> S : seleccionarComision(alumnoCarreraId, comisionId)
+S --> U : materia, cuatrimestre, profesor y horarios
+U -> S : confirmarInscripcion()
+alt cumple todas las reglas
+  S --> U : inscripción registrada (EN_CURSO)
+else correlativas pendientes
+  S --> U : lista de correlativas faltantes
+else inactivo, materia fuera del plan o inscripción duplicada
+  S --> U : motivo del rechazo
+end
+@enduml

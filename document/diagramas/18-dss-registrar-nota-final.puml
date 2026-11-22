@@ -1,0 +1,16 @@
+@startuml dss-registrar-nota-final
+skinparam shadowing false
+title DSS - UC-13 Registrar nota final
+actor "Profesor" as U
+participant ":Sistema" as S
+U -> S : seleccionarActa(actaId)
+S --> U : alumnos REGULAR habilitados
+U -> S : registrarNotaFinal(inscriptoId, valor)
+alt regular, correlativas aprobadas, nota 0..10 y acta abierta
+  S --> U : nota registrada
+else alumno no REGULAR o correlativas pendientes
+  S --> U : "Alumno no habilitado para rendir final"
+else nota fuera de rango o acta cerrada
+  S --> U : motivo del rechazo
+end
+@enduml

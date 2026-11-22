@@ -1,0 +1,216 @@
+@startuml modelo-de-datos
+!pragma layout smetana
+skinparam shadowing false
+skinparam linetype ortho
+hide circle
+hide methods
+
+entity usuarios {
+  * id : BIGINT <<PK>>
+  --
+  * username : VARCHAR(50) <<UQ>>
+  * password : VARCHAR(255)
+  * nombre : VARCHAR(80)
+  * apellido : VARCHAR(80)
+  * dni : VARCHAR(8) <<UQ>>
+  * email : VARCHAR(120) <<UQ>>
+  telefono : VARCHAR(15)
+  * activo : BOOLEAN
+  * fecha_alta : DATETIME
+  * fecha_modificacion : DATETIME
+}
+
+entity user_roles {
+  * user_id : BIGINT <<PK,FK>>
+  * role : ENUM('ADMIN','ADMINISTRATIVO','PROFESOR','ALUMNO') <<PK>>
+}
+
+entity alumno {
+  * id : BIGINT <<PK>>
+  --
+  * user_id : BIGINT <<FK,UQ>>
+  * estado : ENUM('ACTIVO','INACTIVO')
+}
+
+entity profesor {
+  * id : BIGINT <<PK>>
+  --
+  * user_id : BIGINT <<FK,UQ>>
+  * estado : ENUM('ACTIVO','INACTIVO')
+}
+
+entity carrera {
+  * id : BIGINT <<PK>>
+  --
+  * nombre : VARCHAR(120) <<UQ>>
+}
+
+entity plan_estudio {
+  * id : BIGINT <<PK>>
+  --
+  * carrera_id : BIGINT <<FK>>
+  * nombre : VARCHAR(80)
+  * fecha_inicio : DATE
+  fecha_fin : DATE
+}
+
+entity alumno_carrera {
+  * id : BIGINT <<PK>>
+  --
+  * alumno_id : BIGINT <<FK>>
+  * carrera_id : BIGINT <<FK>>
+  * plan_estudio_id : BIGINT <<FK>>
+  * anio_ingreso : SMALLINT
+  UQ(alumno_id, carrera_id)
+}
+
+entity materia {
+  * id : BIGINT <<PK>>
+  --
+  * plan_estudio_id : BIGINT <<FK>>
+  * codigo : VARCHAR(20) <<UQ>>
+  * nombre : VARCHAR(120)
+  * anio : TINYINT
+  * cuatrimestre : TINYINT
+  * estado : ENUM('ACTIVA','INACTIVA')
+}
+
+entity correlativas {
+  * materia_id : BIGINT <<PK,FK>>
+  * correlativa_id : BIGINT <<PK,FK>>
+}
+
+entity cuatrimestre {
+  * id : BIGINT <<PK>>
+  --
+  * anio : SMALLINT
+  * numero : TINYINT
+  * fecha_inicio : DATE
+  * fecha_fin : DATE
+  UQ(anio, numero)
+}
+
+entity comision_materia {
+  * id : BIGINT <<PK>>
+  --
+  * materia_id : BIGINT <<FK>>
+  * cuatrimestre_id : BIGINT <<FK>>
+  * profesor_id : BIGINT <<FK>>
+  * asistencia_cerrada : BOOLEAN
+  fecha_cierre_asistencia : DATETIME
+}
+
+entity horario_clase {
+  * id : BIGINT <<PK>>
+  --
+  * comision_id : BIGINT <<FK>>
+  * dia_semana : ENUM('MONDAY'..'FRIDAY')
+}
+
+entity modulo_horario {
+  * id : BIGINT <<PK>>
+  --
+  * numero : INT <<UQ>>
+  * hora_inicio : TIME
+  * hora_fin : TIME
+}
+
+entity horario_modulos {
+  * horario_id : BIGINT <<PK,FK>>
+  * modulo_id : BIGINT <<PK,FK>>
+}
+
+entity alumno_inscripto {
+  * id : BIGINT <<PK>>
+  --
+  * alumno_carrera_id : BIGINT <<FK>>
+  * comision_id : BIGINT <<FK>>
+  * estado : ENUM('EN_CURSO','REGULAR','PROMOCIONADO',\n'APROBADO','DESAPROBADO','RECURSA','BAJA')
+  nota_final : DECIMAL(3,1)
+  porcentaje_asistencia : DECIMAL(5,2)
+  promedio : DECIMAL(4,2)
+  * fecha_inscripcion : DATETIME
+  UQ(alumno_carrera_id, comision_id)
+}
+
+entity asistencia {
+  * id : BIGINT <<PK>>
+  --
+  * alumno_inscripto_id : BIGINT <<FK>>
+  * horario_id : BIGINT <<FK>>
+  * fecha : DATE
+  * estado : ENUM('PRESENTE','AUSENTE','JUSTIFICADA')
+  motivo : VARCHAR(255)
+  certificado : VARCHAR(255)
+  * registrado_por : BIGINT <<FK usuarios>>
+  UQ(alumno_inscripto_id, horario_id, fecha)
+}
+
+entity examen {
+  * id : BIGINT <<PK>>
+  --
+  * comision_id : BIGINT <<FK>>
+  * tipo : ENUM('TP','PARCIAL','RECUPERATORIO','FINAL')
+  * fecha : DATE
+  descripcion : VARCHAR(200)
+  examen_recuperado_id : BIGINT <<FK examen>>
+}
+
+entity nota {
+  * id : BIGINT <<PK>>
+  --
+  * alumno_inscripto_id : BIGINT <<FK>>
+  * examen_id : BIGINT <<FK>>
+  * valor : DECIMAL(3,1) CHECK 0..10
+  * fecha : DATETIME
+  UQ(alumno_inscripto_id, examen_id)
+}
+
+entity acta_final {
+  * id : BIGINT <<PK>>
+  --
+  * examen_id : BIGINT <<FK,UQ>>
+  * estado : ENUM('ABIERTA','CERRADA')
+  fecha_cierre : DATETIME
+  cerrada_por : BIGINT <<FK usuarios>>
+}
+
+entity registro_auditoria {
+  * id : BIGINT <<PK>>
+  --
+  * accion : VARCHAR(50)
+  * entidad : VARCHAR(50)
+  * entidad_id : BIGINT
+  valor_anterior : TEXT
+  valor_nuevo : TEXT
+  motivo : VARCHAR(255)
+  * usuario_id : BIGINT <<FK>>
+  * fecha : DATETIME
+}
+
+usuarios ||--|{ user_roles
+usuarios ||--o| alumno
+usuarios ||--o| profesor
+carrera ||--|{ plan_estudio
+plan_estudio ||--|{ materia
+materia ||--o{ correlativas
+materia ||--o{ correlativas
+alumno ||--o{ alumno_carrera
+carrera ||--o{ alumno_carrera
+plan_estudio ||--o{ alumno_carrera
+materia ||--o{ comision_materia
+cuatrimestre ||--o{ comision_materia
+profesor ||--o{ comision_materia
+comision_materia ||--|{ horario_clase
+horario_clase ||--|{ horario_modulos
+modulo_horario ||--o{ horario_modulos
+alumno_carrera ||--o{ alumno_inscripto
+comision_materia ||--o{ alumno_inscripto
+alumno_inscripto ||--o{ asistencia
+horario_clase ||--o{ asistencia
+comision_materia ||--o{ examen
+examen ||--o{ nota
+alumno_inscripto ||--o{ nota
+examen ||--o| acta_final
+usuarios ||--o{ registro_auditoria
+@enduml

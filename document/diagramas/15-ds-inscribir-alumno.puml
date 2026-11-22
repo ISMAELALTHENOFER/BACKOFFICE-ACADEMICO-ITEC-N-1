@@ -1,0 +1,35 @@
+@startuml ds-inscribir-alumno
+skinparam shadowing false
+title DS - confirmarInscripcion()
+actor Administrativo
+participant ":InscripcionController" as C
+participant ":InscripcionServiceImpl" as S
+participant ":Autorizador" as AU
+participant ":AlumnoCarreraRepository" as ACR
+participant ":ComisionMateriaRepository" as CR
+participant ":AlumnoInscriptoRepository" as IR
+participant ":ValidadorCorrelativas" as V
+
+Administrativo -> C : inscribir()
+C -> S : inscribir(alumnoCarreraId, comisionId)
+S -> AU : exigirRol(ADMINISTRATIVO, ADMIN)
+S -> ACR : findById(alumnoCarreraId)
+ACR --> S : alumnoCarrera (alumno y plan)
+S -> CR : findById(comisionId)
+CR --> S : comision (materia y cuatrimestre)
+S -> S : validar alumno ACTIVO, materia ACTIVA\ny materia del plan del alumno
+S -> IR : existeInscripcionVigente(alumnoId, materiaId)
+IR --> S : boolean
+S -> V : faltantes(alumnoId, materiaId)
+V --> S : List<Materia>
+alt sin faltantes ni duplicado
+  create participant "i:AlumnoInscripto" as I
+  S -> I : new AlumnoInscripto(alumnoCarrera, comision, EN_CURSO)
+  S -> IR : save(i)
+  S --> C : i
+  C --> Administrativo : confirmación
+else regla incumplida
+  S --> C : ReglaNegocioException(detalle)
+  C --> Administrativo : motivo del rechazo
+end
+@enduml

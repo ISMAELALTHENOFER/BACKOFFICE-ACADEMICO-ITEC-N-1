@@ -1,0 +1,43 @@
+@startuml estados-academicos
+!pragma layout smetana
+skinparam shadowing false
+title Estado de cursada del alumno (AlumnoInscripto.estado)
+
+state EN_CURSO {
+  state "Condición de asistencia\nREGULAR (>= 70 %)" as PROV_REG
+  state "Condición de asistencia\nNO_REGULAR (< 70 %)" as PROV_NOREG
+  [*] --> PROV_REG
+  PROV_REG --> PROV_NOREG : registrar asistencia\n[asistencia < 70 %]
+  PROV_NOREG --> PROV_REG : registrar / justificar\n[asistencia >= 70 %]
+}
+
+state "Cursada cerrada" as CERRADA {
+  state RECURSA
+  state REGULAR
+  state PROMOCIONADO
+}
+
+[*] --> EN_CURSO : inscribirAlumno()\n[alumno ACTIVO, materia ACTIVA del plan,\ncorrelativas aprobadas, sin duplicado]
+EN_CURSO --> BAJA : darDeBaja()
+EN_CURSO --> CERRADA : cerrarAsistencia()
+EN_CURSO -down-> RECURSA : [asistencia < 70 %\no promedio < 6]
+EN_CURSO -down-> REGULAR : [>= 70 % y 6 <= promedio < 8]
+EN_CURSO -down-> PROMOCIONADO : [>= 70 % y promedio >= 8]
+CERRADA --> EN_CURSO : reabrirAsistencia()\n[ADMINISTRATIVO o ADMIN,\nmotivo obligatorio, auditado]
+
+REGULAR --> APROBADO : cerrarActa()\n[nota final >= 6]
+REGULAR --> DESAPROBADO : cerrarActa()\n[nota final < 6]
+
+APROBADO --> [*]
+PROMOCIONADO --> [*]
+DESAPROBADO --> [*]
+RECURSA --> [*]
+BAJA --> [*]
+
+note right of APROBADO
+  APROBADO y PROMOCIONADO cuentan como
+  materia aprobada para validar correlativas.
+  RECURSA, DESAPROBADO y BAJA permiten
+  inscribirse de nuevo en otro cuatrimestre.
+end note
+@enduml

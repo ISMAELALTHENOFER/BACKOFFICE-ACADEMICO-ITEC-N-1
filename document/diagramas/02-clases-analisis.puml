@@ -1,0 +1,115 @@
+@startuml clases-analisis
+!pragma layout smetana
+skinparam shadowing false
+hide methods
+hide circle
+
+class User {
+  username
+  password
+  nombre
+  apellido
+  dni
+  email
+  telefono
+  roles
+  activo
+}
+class Alumno {
+  estado
+}
+class Profesor {
+  estado
+}
+class Carrera {
+  nombre
+}
+class PlanEstudio {
+  nombre
+  fechaInicio
+  fechaFin
+}
+class AlumnoCarrera {
+  anioIngreso
+}
+class Materia {
+  codigo
+  nombre
+  anio
+  cuatrimestre
+  estado
+}
+class Cuatrimestre {
+  anio
+  numero
+  fechaInicio
+  fechaFin
+}
+class ComisionMateria {
+  asistenciaCerrada
+}
+class HorarioClase {
+  diaSemana
+}
+class ModuloHorario {
+  numero
+  horaInicio
+  horaFin
+}
+class AlumnoInscripto {
+  estado
+  notaFinal
+  porcentajeAsistencia
+  promedio
+}
+class Asistencia {
+  fecha
+  estado
+  motivo
+  certificado
+}
+class Examen {
+  fecha
+  tipo
+  descripcion
+}
+class Nota {
+  valor
+}
+class ActaFinal {
+  estado
+  fechaCierre
+}
+class RegistroAuditoria {
+  accion
+  entidad
+  valorAnterior
+  valorNuevo
+  fecha
+  motivo
+}
+
+User "1" -- "0..1" Alumno
+User "1" -- "0..1" Profesor
+Carrera "1" o-- "1..*" PlanEstudio : planes
+PlanEstudio "1" o-- "1..*" Materia : materias
+Materia "0..*" o-- "0..*" Materia : correlativas
+Alumno "1" *-- "0..*" AlumnoCarrera : carreras
+Carrera "1" -- "0..*" AlumnoCarrera
+PlanEstudio "1" -- "0..*" AlumnoCarrera
+Materia "1" -- "0..*" ComisionMateria
+Cuatrimestre "1" -- "0..*" ComisionMateria
+Profesor "1" -- "0..*" ComisionMateria
+ComisionMateria "1" o-- "1..*" HorarioClase : horarios
+HorarioClase "0..*" o-- "1..*" ModuloHorario : modulos
+ComisionMateria "1" o-- "0..*" Examen : examenes
+ComisionMateria "1" o-- "0..*" AlumnoInscripto : inscriptos
+AlumnoCarrera "1" o-- "0..*" AlumnoInscripto : inscripciones
+AlumnoInscripto "1" o-- "0..*" Asistencia : asistencias
+HorarioClase "1" -- "0..*" Asistencia
+AlumnoInscripto "1" o-- "0..*" Nota : notas
+Examen "1" o-- "0..*" Nota : notas
+Examen "0..1" -- "0..1" Examen : recupera >
+Examen "1" -- "0..1" ActaFinal
+User "1" -- "0..*" RegistroAuditoria : realiza >
+@enduml
