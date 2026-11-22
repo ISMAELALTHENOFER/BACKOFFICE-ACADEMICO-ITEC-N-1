@@ -1,31 +1,33 @@
 @startuml ds-registrar-asistencia
 skinparam shadowing false
 title DS - confirmarAsistencia()
-actor Docente
+actor Profesor
 participant ":AsistenciaController" as C
-participant ":AsistenciaService" as S
+participant ":AsistenciaServiceImpl" as S
+participant ":HorarioClaseRepository" as HR
 participant ":Autorizador" as AU
-participant ":ClaseRepository" as CL
 participant ":AsistenciaRepository" as AR
 participant ":CalculadoraRegularidad" as CALC
-participant ":InscripcionRepository" as IR
+participant ":AlumnoInscriptoRepository" as IR
 participant ":AuditoriaService" as AUD
 
-Docente -> C : guardar()
-C -> S : registrar(claseId, marcas)
-S -> CL : buscarPorId(claseId)
-CL --> S : clase (con comisión)
-S -> AU : exigirDocenteAsignado(comisionId)
-S -> S : validar comisión con asistencia abierta
+Profesor -> C : guardar()
+C -> S : registrar(horarioId, fecha, marcas)
+S -> HR : findById(horarioId)
+HR --> S : horario (con comisión)
+S -> AU : exigirProfesorDeComision(comisionId)
+S -> S : validar asistencia abierta y día del horario
 loop por cada marca
-  S -> AR : guardarOActualizar(inscripcionId, claseId, estado)
+  S -> AR : guardarOActualizar(inscriptoId, horarioId, fecha, estado)
   S -> AUD : registrar("CARGA_ASISTENCIA", "asistencia", id, anterior, nuevo, null)
-  S -> AR : listarPorInscripcion(inscripcionId)
+  S -> AR : findByInscripto(inscriptoId)
   AR --> S : asistencias
-  S -> CALC : porcentaje(asistencias)
+  S -> AR : contarClasesDictadas(comisionId)
+  AR --> S : clasesDictadas
+  S -> CALC : porcentaje(asistencias, clasesDictadas)
   CALC --> S : porcentaje
-  S -> IR : actualizarPorcentaje(inscripcionId, porcentaje)
+  S -> IR : actualizarPorcentaje(inscriptoId, porcentaje)
 end
 S --> C : ok
-C --> Docente : confirmación con condición provisoria
+C --> Profesor : confirmación con condición de asistencia
 @enduml

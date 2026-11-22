@@ -5,16 +5,16 @@ skinparam classAttributeIconSize 0
 title Diagrama de clases de diseño - controladores, servicios y persistencia
 left to right direction
 
-package "presentation.controller" {
-  class LoginController {
-    + ingresar() : void
+package "controller" {
+  class AuthController {
+    + login() : void
   }
   class InscripcionController {
     + buscarAlumno() : void
     + inscribir() : void
   }
   class AsistenciaController {
-    + seleccionarClase() : void
+    + seleccionarHorario() : void
     + guardar() : void
   }
   class ActaController {
@@ -25,105 +25,112 @@ package "presentation.controller" {
 
 package "security" {
   class Sesion {
-    - usuario : Usuario
-    + iniciar(u : Usuario) : void
-    + usuarioActual() : Usuario
+    - user : User
+    + iniciar(u : User) : void
+    + usuarioActual() : User
     + cerrar() : void
   }
-  class PasswordHasher {
-    + hashear(clave : char[]) : String
-    + verificar(clave : char[], hash : String) : boolean
+  class PasswordEncoder {
+    + encode(clave : char[]) : String
+    + matches(clave : char[], hash : String) : boolean
   }
   class Autorizador {
     + exigirRol(roles : Rol...) : void
-    + exigirDocenteAsignado(comisionId : long) : void
+    + exigirProfesorDeComision(comisionId : Long) : void
   }
 }
 
 package "service" {
-  class AuthService {
-    + iniciarSesion(usuario : String, clave : char[]) : Usuario
+  interface AuthService {
+    + login(username : String, clave : char[]) : User
   }
-  class AlumnoService {
-    + crear(datos : Alumno) : Alumno
-    + buscarPorDni(dni : String) : Alumno
-    + modificar(datos : Alumno) : Alumno
-    + darDeBaja(id : long) : void
+  interface AlumnoService {
+    + crear(request : AlumnoRequest) : AlumnoResponse
+    + buscarPorDni(dni : String) : AlumnoResponse
+    + modificar(id : Long, request : AlumnoRequest) : AlumnoResponse
+    + darDeBaja(id : Long) : void
+    + inscribirEnCarrera(alumnoId : Long, planId : Long, anioIngreso : int) : void
   }
-  class InscripcionService {
-    + inscribir(alumnoId : long, comisionId : long) : Inscripcion
+  interface InscripcionService {
+    + inscribir(alumnoCarreraId : Long, comisionId : Long) : AlumnoInscripto
   }
-  class AsistenciaService {
-    + registrar(claseId : long, marcas : Map<Long, EstadoAsistencia>) : void
-    + justificar(asistenciaId : long, motivo : String, certificado : String) : void
-    + cerrar(comisionId : long) : void
+  interface AsistenciaService {
+    + registrar(horarioId : Long, fecha : LocalDate, marcas : Map<Long, EstadoAsistencia>) : void
+    + justificar(asistenciaId : Long, motivo : String, certificado : String) : void
+    + cerrar(comisionId : Long) : void
   }
-  class CalificacionService {
-    + registrar(inscripcionId : long, evaluacionId : long, nota : BigDecimal) : Calificacion
-    + modificar(calificacionId : long, nota : BigDecimal) : Calificacion
-    + registrarFinal(actaId : long, inscripcionId : long, nota : BigDecimal) : Calificacion
+  interface NotaService {
+    + registrar(inscriptoId : Long, examenId : Long, valor : BigDecimal) : Nota
+    + modificar(notaId : Long, valor : BigDecimal) : Nota
+    + registrarFinal(actaId : Long, inscriptoId : Long, valor : BigDecimal) : Nota
   }
-  class ActaService {
-    + cerrar(actaId : long) : void
-    + reabrir(actaId : long, motivo : String) : void
+  interface ActaService {
+    + cerrar(actaId : Long) : void
+    + reabrir(actaId : Long, motivo : String) : void
   }
-  class AuditoriaService {
-    + registrar(accion : String, entidad : String, id : long, anterior : String, nuevo : String, motivo : String) : void
+  interface AuditoriaService {
+    + registrar(accion : String, entidad : String, id : Long, anterior : String, nuevo : String, motivo : String) : void
   }
 }
 
-package "domain.rule" {
+package "service.impl" {
+  class InscripcionServiceImpl
+  class AsistenciaServiceImpl
+  class NotaServiceImpl
+}
+
+package "rule" {
   class CalculadoraRegularidad {
     + {static} UMBRAL : BigDecimal = 70
-    + porcentaje(asistencias : List<Asistencia>) : BigDecimal
+    + porcentaje(asistencias : List<Asistencia>, clasesDictadas : int) : BigDecimal
     + esRegular(porcentaje : BigDecimal) : boolean
   }
   class CalculadoraCondicion {
-    + promedio(notas : List<Calificacion>) : BigDecimal
-    + condicionDeCursada(porcentaje : BigDecimal, promedio : BigDecimal) : EstadoAcademico
-    + resultadoFinal(nota : BigDecimal) : EstadoAcademico
+    + promedio(notas : List<Nota>) : BigDecimal
+    + estadoDeCursada(porcentaje : BigDecimal, promedio : BigDecimal) : EstadoCursada
+    + resultadoFinal(valor : BigDecimal) : EstadoCursada
   }
   class ValidadorCorrelativas {
-    + faltantes(alumnoId : long, materiaId : long) : List<Materia>
+    + faltantes(alumnoId : Long, materiaId : Long) : List<Materia>
   }
 }
 
 package "repository" {
-  interface AlumnoRepository
-  interface InscripcionRepository
+  interface UserRepository
+  interface AlumnoInscriptoRepository
   interface AsistenciaRepository
-  interface CalificacionRepository
-  interface ActaRepository
+  interface NotaRepository
+  interface ActaFinalRepository
 }
 
-package "persistence" {
-  class InscripcionRepositoryImpl
-  class ConfiguracionBaseDatos {
-    + url : String
-    + usuario : String
-  }
-}
-
-LoginController --> AuthService
+AuthController --> AuthService
 InscripcionController --> InscripcionService
 AsistenciaController --> AsistenciaService
-ActaController --> CalificacionService
+ActaController --> NotaService
 ActaController --> ActaService
-AuthService --> PasswordHasher
-AuthService --> Sesion
-InscripcionService --> Autorizador
-InscripcionService --> ValidadorCorrelativas
-InscripcionService --> InscripcionRepository
-AsistenciaService --> Autorizador
-AsistenciaService --> CalculadoraRegularidad
-AsistenciaService --> AsistenciaRepository
-AsistenciaService --> AuditoriaService
-CalificacionService --> CalculadoraCondicion
-CalificacionService --> CalificacionRepository
-CalificacionService --> AuditoriaService
-ActaService --> ActaRepository
-ActaService --> AuditoriaService
-AlumnoService --> AlumnoRepository
-InscripcionRepositoryImpl ..|> InscripcionRepository
-InscripcionRepositoryImpl --> ConfiguracionBaseDatos
+AuthService ..> PasswordEncoder
+AuthService ..> Sesion
+AuthService ..> UserRepository
+InscripcionServiceImpl ..|> InscripcionService
+AsistenciaServiceImpl ..|> AsistenciaService
+NotaServiceImpl ..|> NotaService
+InscripcionServiceImpl --> Autorizador
+InscripcionServiceImpl --> ValidadorCorrelativas
+InscripcionServiceImpl --> AlumnoInscriptoRepository
+AsistenciaServiceImpl --> Autorizador
+AsistenciaServiceImpl --> CalculadoraRegularidad
+AsistenciaServiceImpl --> AsistenciaRepository
+AsistenciaServiceImpl --> AuditoriaService
+NotaServiceImpl --> CalculadoraCondicion
+NotaServiceImpl --> NotaRepository
+NotaServiceImpl --> AuditoriaService
+ActaService ..> ActaFinalRepository
+ActaService ..> AuditoriaService
+
+note bottom of InscripcionServiceImpl
+  Cada servicio es una interfaz XService con su
+  implementación XServiceImpl (solo se muestran tres).
+  Los repositorios son interfaces; su implementación
+  depende de la variante (escritorio o web).
+end note
 @enduml

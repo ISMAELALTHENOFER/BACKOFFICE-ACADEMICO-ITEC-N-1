@@ -4,81 +4,77 @@ skinparam shadowing false
 hide methods
 hide circle
 
-class Usuario {
-  nombreUsuario
-  rol
+class User {
+  username
+  password
+  nombre
+  apellido
+  dni
+  email
+  telefono
+  roles
   activo
 }
 class Alumno {
-  dni
-  nombre
-  apellido
-  email
-  telefono
   estado
 }
-class Docente {
-  dni
-  nombre
-  apellido
-  email
-  telefono
+class Profesor {
   estado
 }
 class Carrera {
-  codigo
   nombre
 }
 class PlanEstudio {
   nombre
-  anio
+  fechaInicio
+  fechaFin
+}
+class AlumnoCarrera {
+  anioIngreso
 }
 class Materia {
   codigo
   nombre
-  anioCursada
+  anio
   cuatrimestre
   estado
 }
-class Comision {
-  codigo
-  cicloLectivo
-  cuatrimestre
+class Cuatrimestre {
+  anio
+  numero
+  fechaInicio
+  fechaFin
+}
+class ComisionMateria {
   asistenciaCerrada
 }
-class Horario {
+class HorarioClase {
   diaSemana
+}
+class ModuloHorario {
+  numero
   horaInicio
   horaFin
-  aula
 }
-class Clase {
-  fecha
-  tema
-}
-class AsignacionDocente {
-  rolDocente
-  activa
-}
-class Inscripcion {
-  fecha
-  estadoAcademico
+class AlumnoInscripto {
+  estado
+  notaFinal
   porcentajeAsistencia
   promedio
 }
 class Asistencia {
+  fecha
   estado
   motivo
   certificado
 }
-class Evaluacion {
+class Examen {
+  fecha
   tipo
-  fecha
+  descripcion
 }
-class Calificacion {
-  nota
-  observaciones
-  fecha
+class Nota {
+  valor
 }
 class ActaFinal {
   estado
@@ -93,23 +89,27 @@ class RegistroAuditoria {
   motivo
 }
 
-Usuario "0..1" -- "0..1" Alumno
-Usuario "0..1" -- "0..1" Docente
-Carrera "1" -- "1..*" PlanEstudio
-PlanEstudio "1" -- "1..*" Materia
-Materia "0..*" -- "0..*" Materia : correlativa de >
-Materia "1" -- "0..*" Comision
-Comision "1" -- "1..*" Horario
-Comision "1" -- "0..*" Clase
-Comision "1" -- "1..*" AsignacionDocente
-Docente "1" -- "0..*" AsignacionDocente
-Alumno "1" -- "0..*" Inscripcion
-Comision "1" -- "0..*" Inscripcion
-Inscripcion "1" -- "0..*" Asistencia
-Clase "1" -- "0..*" Asistencia
-Comision "1" -- "0..*" Evaluacion
-Evaluacion "1" -- "0..*" Calificacion
-Inscripcion "1" -- "0..*" Calificacion
-Evaluacion "1" -- "0..1" ActaFinal
-Usuario "1" -- "0..*" RegistroAuditoria : realiza >
+User "1" -- "0..1" Alumno
+User "1" -- "0..1" Profesor
+Carrera "1" o-- "1..*" PlanEstudio : planes
+PlanEstudio "1" o-- "1..*" Materia : materias
+Materia "0..*" o-- "0..*" Materia : correlativas
+Alumno "1" *-- "0..*" AlumnoCarrera : carreras
+Carrera "1" -- "0..*" AlumnoCarrera
+PlanEstudio "1" -- "0..*" AlumnoCarrera
+Materia "1" -- "0..*" ComisionMateria
+Cuatrimestre "1" -- "0..*" ComisionMateria
+Profesor "1" -- "0..*" ComisionMateria
+ComisionMateria "1" o-- "1..*" HorarioClase : horarios
+HorarioClase "0..*" o-- "1..*" ModuloHorario : modulos
+ComisionMateria "1" o-- "0..*" Examen : examenes
+ComisionMateria "1" o-- "0..*" AlumnoInscripto : inscriptos
+AlumnoCarrera "1" o-- "0..*" AlumnoInscripto : inscripciones
+AlumnoInscripto "1" o-- "0..*" Asistencia : asistencias
+HorarioClase "1" -- "0..*" Asistencia
+AlumnoInscripto "1" o-- "0..*" Nota : notas
+Examen "1" o-- "0..*" Nota : notas
+Examen "0..1" -- "0..1" Examen : recupera >
+Examen "1" -- "0..1" ActaFinal
+User "1" -- "0..*" RegistroAuditoria : realiza >
 @enduml

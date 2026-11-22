@@ -4,33 +4,31 @@ skinparam shadowing false
 title Paquetes del sistema (itec.backoffice)
 
 package "itec.backoffice" {
-  folder "app" as app
-  folder "presentation.view" as vista
-  folder "presentation.controller" as ctrl
+  folder "view" as vista
+  folder "controller" as ctrl
+  folder "dto" as dto
   folder "service" as srv
+  folder "service.impl" as impl
+  folder "rule" as rule
   folder "security" as sec
-  folder "domain.model" as model
-  folder "domain.rule" as rule
-  folder "domain.exception" as exc
+  folder "model" as model
+  folder "exception" as exc
   folder "repository" as repo
-  folder "persistence" as pers
-  folder "config" as cfg
+  folder "configuration" as cfg
 }
 
-app ..> ctrl
-app ..> cfg
 vista ..> ctrl
 ctrl ..> srv
+ctrl ..> dto
 ctrl ..> sec
-ctrl ..> model
-srv ..> sec
-srv ..> rule
-srv ..> model
-srv ..> exc
-srv ..> repo
+impl ..|> srv
+impl ..> rule
+impl ..> repo
+impl ..> model
+impl ..> exc
+impl ..> sec
+srv ..> dto
 rule ..> model
 repo ..> model
-pers ..> repo
-pers ..> model
-pers ..> cfg
+repo ..> cfg
 @enduml

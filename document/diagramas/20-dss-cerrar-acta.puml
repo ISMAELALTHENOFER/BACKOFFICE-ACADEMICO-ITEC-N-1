@@ -1,11 +1,11 @@
 @startuml dss-cerrar-acta
 skinparam shadowing false
 title DSS - UC-15 Cerrar acta final
-actor "Docente" as U
+actor "Profesor" as U
 participant ":Sistema" as S
 U -> S : cerrarActa(actaId)
 alt todos los alumnos habilitados tienen nota final
-  S --> U : acta CERRADA; condiciones APROBADO / DESAPROBADO aplicadas
+  S --> U : acta CERRADA; estados APROBADO / DESAPROBADO aplicados
 else faltan notas
   S --> U : lista de alumnos sin nota final
 end

@@ -5,49 +5,44 @@ skinparam linetype ortho
 hide circle
 hide methods
 
-entity usuario {
+entity usuarios {
   * id : BIGINT <<PK>>
   --
-  * nombre_usuario : VARCHAR(50) <<UQ>>
-  * hash_contrasena : VARCHAR(255)
-  * rol : ENUM('ADM','DOC','ALU')
+  * username : VARCHAR(50) <<UQ>>
+  * password : VARCHAR(255)
+  * nombre : VARCHAR(80)
+  * apellido : VARCHAR(80)
+  * dni : VARCHAR(8) <<UQ>>
+  * email : VARCHAR(120) <<UQ>>
+  telefono : VARCHAR(15)
   * activo : BOOLEAN
   * fecha_alta : DATETIME
+  * fecha_modificacion : DATETIME
+}
+
+entity user_roles {
+  * user_id : BIGINT <<PK,FK>>
+  * role : ENUM('ADMIN','ADMINISTRATIVO','PROFESOR','ALUMNO') <<PK>>
 }
 
 entity alumno {
   * id : BIGINT <<PK>>
   --
-  * dni : VARCHAR(10) <<UQ>>
-  * nombre : VARCHAR(80)
-  * apellido : VARCHAR(80)
-  * email : VARCHAR(120)
-  telefono : VARCHAR(30)
+  * user_id : BIGINT <<FK,UQ>>
   * estado : ENUM('ACTIVO','INACTIVO')
-  usuario_id : BIGINT <<FK,UQ>>
-  * fecha_alta : DATETIME
-  * fecha_modificacion : DATETIME
 }
 
-entity docente {
+entity profesor {
   * id : BIGINT <<PK>>
   --
-  * dni : VARCHAR(10) <<UQ>>
-  * nombre : VARCHAR(80)
-  * apellido : VARCHAR(80)
-  * email : VARCHAR(120)
-  telefono : VARCHAR(30)
+  * user_id : BIGINT <<FK,UQ>>
   * estado : ENUM('ACTIVO','INACTIVO')
-  usuario_id : BIGINT <<FK,UQ>>
-  * fecha_alta : DATETIME
-  * fecha_modificacion : DATETIME
 }
 
 entity carrera {
   * id : BIGINT <<PK>>
   --
-  * codigo : VARCHAR(20) <<UQ>>
-  * nombre : VARCHAR(120)
+  * nombre : VARCHAR(120) <<UQ>>
 }
 
 entity plan_estudio {
@@ -55,7 +50,18 @@ entity plan_estudio {
   --
   * carrera_id : BIGINT <<FK>>
   * nombre : VARCHAR(80)
-  * anio : SMALLINT
+  * fecha_inicio : DATE
+  fecha_fin : DATE
+}
+
+entity alumno_carrera {
+  * id : BIGINT <<PK>>
+  --
+  * alumno_id : BIGINT <<FK>>
+  * carrera_id : BIGINT <<FK>>
+  * plan_estudio_id : BIGINT <<FK>>
+  * anio_ingreso : SMALLINT
+  UQ(alumno_id, carrera_id)
 }
 
 entity materia {
@@ -64,110 +70,109 @@ entity materia {
   * plan_estudio_id : BIGINT <<FK>>
   * codigo : VARCHAR(20) <<UQ>>
   * nombre : VARCHAR(120)
-  * anio_cursada : TINYINT
+  * anio : TINYINT
   * cuatrimestre : TINYINT
   * estado : ENUM('ACTIVA','INACTIVA')
 }
 
-entity correlatividad {
+entity correlativas {
   * materia_id : BIGINT <<PK,FK>>
   * correlativa_id : BIGINT <<PK,FK>>
 }
 
-entity comision {
+entity cuatrimestre {
+  * id : BIGINT <<PK>>
+  --
+  * anio : SMALLINT
+  * numero : TINYINT
+  * fecha_inicio : DATE
+  * fecha_fin : DATE
+  UQ(anio, numero)
+}
+
+entity comision_materia {
   * id : BIGINT <<PK>>
   --
   * materia_id : BIGINT <<FK>>
-  * codigo : VARCHAR(20)
-  * ciclo_lectivo : SMALLINT
-  * cuatrimestre : TINYINT
+  * cuatrimestre_id : BIGINT <<FK>>
+  * profesor_id : BIGINT <<FK>>
   * asistencia_cerrada : BOOLEAN
   fecha_cierre_asistencia : DATETIME
-  UQ(materia_id, codigo, ciclo_lectivo)
 }
 
-entity horario {
+entity horario_clase {
   * id : BIGINT <<PK>>
   --
   * comision_id : BIGINT <<FK>>
-  * dia_semana : ENUM('LUNES'..'VIERNES')
+  * dia_semana : ENUM('MONDAY'..'FRIDAY')
+}
+
+entity modulo_horario {
+  * id : BIGINT <<PK>>
+  --
+  * numero : INT <<UQ>>
   * hora_inicio : TIME
   * hora_fin : TIME
-  aula : VARCHAR(30)
 }
 
-entity clase {
-  * id : BIGINT <<PK>>
-  --
-  * comision_id : BIGINT <<FK>>
-  * fecha : DATE
-  tema : VARCHAR(200)
-  UQ(comision_id, fecha)
+entity horario_modulos {
+  * horario_id : BIGINT <<PK,FK>>
+  * modulo_id : BIGINT <<PK,FK>>
 }
 
-entity asignacion_docente {
+entity alumno_inscripto {
   * id : BIGINT <<PK>>
   --
+  * alumno_carrera_id : BIGINT <<FK>>
   * comision_id : BIGINT <<FK>>
-  * docente_id : BIGINT <<FK>>
-  * rol_docente : ENUM('RESPONSABLE','AUXILIAR')
-  * activa : BOOLEAN
-  UQ(comision_id, docente_id)
-}
-
-entity inscripcion {
-  * id : BIGINT <<PK>>
-  --
-  * alumno_id : BIGINT <<FK>>
-  * comision_id : BIGINT <<FK>>
-  * fecha : DATETIME
-  * estado_academico : ENUM('EN_CURSO','REGULAR','NO_REGULAR',\n'PROMOCIONADO','APROBADO','DESAPROBADO','BAJA')
+  * estado : ENUM('EN_CURSO','REGULAR','PROMOCIONADO',\n'APROBADO','DESAPROBADO','RECURSA','BAJA')
+  nota_final : DECIMAL(3,1)
   porcentaje_asistencia : DECIMAL(5,2)
   promedio : DECIMAL(4,2)
-  UQ(alumno_id, comision_id)
+  * fecha_inscripcion : DATETIME
+  UQ(alumno_carrera_id, comision_id)
 }
 
 entity asistencia {
   * id : BIGINT <<PK>>
   --
-  * inscripcion_id : BIGINT <<FK>>
-  * clase_id : BIGINT <<FK>>
+  * alumno_inscripto_id : BIGINT <<FK>>
+  * horario_id : BIGINT <<FK>>
+  * fecha : DATE
   * estado : ENUM('PRESENTE','AUSENTE','JUSTIFICADA')
   motivo : VARCHAR(255)
   certificado : VARCHAR(255)
-  * registrado_por : BIGINT <<FK usuario>>
-  * fecha_registro : DATETIME
-  UQ(inscripcion_id, clase_id)
+  * registrado_por : BIGINT <<FK usuarios>>
+  UQ(alumno_inscripto_id, horario_id, fecha)
 }
 
-entity evaluacion {
+entity examen {
   * id : BIGINT <<PK>>
   --
   * comision_id : BIGINT <<FK>>
-  * tipo : ENUM('PARCIAL_1','PARCIAL_2','RECUPERATORIO_1',\n'RECUPERATORIO_2','TRABAJO_PRACTICO','FINAL')
+  * tipo : ENUM('TP','PARCIAL','RECUPERATORIO','FINAL')
   * fecha : DATE
   descripcion : VARCHAR(200)
+  examen_recuperado_id : BIGINT <<FK examen>>
 }
 
-entity calificacion {
+entity nota {
   * id : BIGINT <<PK>>
   --
-  * inscripcion_id : BIGINT <<FK>>
-  * evaluacion_id : BIGINT <<FK>>
-  * nota : DECIMAL(3,1) CHECK 0..10
-  observaciones : VARCHAR(255)
-  * docente_id : BIGINT <<FK>>
+  * alumno_inscripto_id : BIGINT <<FK>>
+  * examen_id : BIGINT <<FK>>
+  * valor : DECIMAL(3,1) CHECK 0..10
   * fecha : DATETIME
-  UQ(inscripcion_id, evaluacion_id)
+  UQ(alumno_inscripto_id, examen_id)
 }
 
 entity acta_final {
   * id : BIGINT <<PK>>
   --
-  * evaluacion_id : BIGINT <<FK,UQ>>
+  * examen_id : BIGINT <<FK,UQ>>
   * estado : ENUM('ABIERTA','CERRADA')
   fecha_cierre : DATETIME
-  cerrada_por : BIGINT <<FK usuario>>
+  cerrada_por : BIGINT <<FK usuarios>>
 }
 
 entity registro_auditoria {
@@ -183,25 +188,29 @@ entity registro_auditoria {
   * fecha : DATETIME
 }
 
-usuario |o--o| alumno
-usuario |o--o| docente
+usuarios ||--|{ user_roles
+usuarios ||--o| alumno
+usuarios ||--o| profesor
 carrera ||--|{ plan_estudio
 plan_estudio ||--|{ materia
-materia ||--o{ correlatividad
-materia ||--o{ correlatividad
-materia ||--o{ comision
-comision ||--|{ horario
-comision ||--o{ clase
-comision ||--|{ asignacion_docente
-docente ||--o{ asignacion_docente
-alumno ||--o{ inscripcion
-comision ||--o{ inscripcion
-inscripcion ||--o{ asistencia
-clase ||--o{ asistencia
-comision ||--o{ evaluacion
-evaluacion ||--o{ calificacion
-inscripcion ||--o{ calificacion
-docente ||--o{ calificacion
-evaluacion ||--o| acta_final
-usuario ||--o{ registro_auditoria
+materia ||--o{ correlativas
+materia ||--o{ correlativas
+alumno ||--o{ alumno_carrera
+carrera ||--o{ alumno_carrera
+plan_estudio ||--o{ alumno_carrera
+materia ||--o{ comision_materia
+cuatrimestre ||--o{ comision_materia
+profesor ||--o{ comision_materia
+comision_materia ||--|{ horario_clase
+horario_clase ||--|{ horario_modulos
+modulo_horario ||--o{ horario_modulos
+alumno_carrera ||--o{ alumno_inscripto
+comision_materia ||--o{ alumno_inscripto
+alumno_inscripto ||--o{ asistencia
+horario_clase ||--o{ asistencia
+comision_materia ||--o{ examen
+examen ||--o{ nota
+alumno_inscripto ||--o{ nota
+examen ||--o| acta_final
+usuarios ||--o{ registro_auditoria
 @enduml

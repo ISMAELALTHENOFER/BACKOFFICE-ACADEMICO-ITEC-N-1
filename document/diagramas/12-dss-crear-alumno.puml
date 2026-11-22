@@ -3,12 +3,14 @@ skinparam shadowing false
 title DSS - UC-03 Gestionar alumnos (Crear)
 actor "Administrativo" as U
 participant ":Sistema" as S
-U -> S : crearAlumno(dni, nombre, apellido, email, teléfono)
-alt datos válidos y DNI no registrado
-  S --> U : alumno creado en estado ACTIVO
-else DNI duplicado
-  S --> U : "Ya existe un alumno con ese DNI"
+U -> S : crearAlumno(username, contraseña, nombre, apellido, dni, email, teléfono)
+alt datos válidos y DNI, email y username no registrados
+  S --> U : usuario con rol ALUMNO y alumno ACTIVO creados
+else DNI, email o username duplicado
+  S --> U : "Ya existe un usuario con ese dato"
 else datos inválidos
   S --> U : detalle de campos inválidos
 end
+U -> S : inscribirEnCarrera(alumnoId, planEstudioId, anioIngreso)
+S --> U : alumno asociado a la carrera y al plan
 @enduml

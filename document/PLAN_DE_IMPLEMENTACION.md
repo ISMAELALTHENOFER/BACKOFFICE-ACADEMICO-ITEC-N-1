@@ -56,13 +56,14 @@ Los diagramas deben quedar en `document/`, como pide el enunciado. Los diagramas
 
 Decisiones tomadas el 22/11/2026. Se detallan como reglas `RN-XX` en [`Documentacion_Backoffice_Academico_ITEC.docx`](Documentacion_Backoffice_Academico_ITEC.docx).
 
-- [x] Roles: «Administrador» y «Administrativo» son el mismo rol `ADM`. Solo `ADM` crea usuarios y asigna roles. Roles del sistema: `ADM`, `DOC`, `ALU`.
+- [x] Modelo de dominio alineado con el modelo de referencia de la cátedra (`User` con datos personales y roles, `Alumno`/`Profesor` 1:1, `Carrera`, `PlanEstudio`, `AlumnoCarrera`, `Materia`, `Cuatrimestre`, `ComisionMateria`, `HorarioClase`, `ModuloHorario`, `Examen`, `Nota`, `AlumnoInscripto`, `Asistencia`), extendido con código y estado de materia, baja lógica, asistencia `JUSTIFICADA`, `ActaFinal` y auditoría.
+- [x] Roles: `ADMIN`, `ADMINISTRATIVO`, `PROFESOR` y `ALUMNO`; un usuario puede tener varios. Solo `ADMIN` crea usuarios `ADMIN`/`ADMINISTRATIVO`; `ADMIN` o `ADMINISTRATIVO` crean `PROFESOR`/`ALUMNO`.
 - [x] Cursada: alumno + materia + comisión + ciclo lectivo. No se permite una inscripción vigente duplicada en la misma materia; se puede recursar en otro ciclo.
 - [x] Calificaciones: escala 0 a 10 con un decimal; 2 parciales y 1 recuperatorio por parcial, que **reemplaza** la nota. Regular y promedio >= 8: `PROMOCIONADO`; regular y promedio >= 6: `REGULAR` (habilita final); si no, `DESAPROBADO`. Final >= 6: `APROBADO`.
 - [x] Asistencia: el 70 % se calcula sobre las clases dictadas; una falta `JUSTIFICADA` cuenta como presente.
-- [x] Cierres: actas y asistencias cerradas solo las reabre `ADM`, con motivo obligatorio y auditoría.
+- [x] Cierres: actas y asistencias cerradas solo las reabre `ADMINISTRATIVO` o `ADMIN`, con motivo obligatorio y auditoría.
 - [x] Ejecución: MySQL en Docker para ambas variantes. La variante JavaFX se compila como `.jar` ejecutable listo para usar y se conecta a MySQL en Docker. La variante Spring Boot se ejecuta completa con Docker (aplicación + MySQL con docker compose).
-- [x] Integrantes: Ismael Althenofer. El alumno (`ALU`) solo consulta su asistencia, notas y condición.
+- [x] Integrantes: Ismael Althenofer. El alumno (`ALUMNO`) solo consulta su asistencia, notas y estado de cursada.
 
 ## Plan de trabajo, en orden de dependencias
 
@@ -70,23 +71,23 @@ Decisiones tomadas el 22/11/2026. Se detallan como reglas `RN-XX` en [`Documenta
 
 - [ ] Sustituir el ejemplo `Hello World!` por la variante de escritorio JavaFX (y luego la variante Spring Boot), con capas claras MVC de presentación, aplicación/negocio y persistencia; mantener Java y Maven y no atar reglas de negocio a la interfaz.
 - [ ] Diseñar y crear el esquema MySQL persistente, relaciones, claves, restricciones y creación reproducible; entregar el **script SQL obligatorio** y proteger historial en bajas lógicas.
-- [ ] Modelar alumnos, docentes, materias, correlativas, carreras, planes, semestres, comisiones, horarios, clases, inscripciones, asistencias, evaluaciones, calificaciones, actas y auditoría según las funciones acordadas. Validar cardinalidades y nombres antes de copiar la imagen al código.
+- [ ] Modelar usuarios, alumnos, profesores, carreras, planes, inscripción a carrera, materias, correlativas, cuatrimestres, comisiones, horarios y módulos, inscripciones, asistencias, exámenes, notas, actas y auditoría según las funciones acordadas. Validar cardinalidades y nombres antes de copiar la imagen al código.
 - [ ] Habilitar configuración externa del entorno (conexión a MySQL y secretos), manejo de errores y ejecución local reproducible. No guardar contraseñas ni credenciales en el repositorio.
 
 ### 2. Acceso y catálogos académicos
 
-- [ ] `US-AUTH-01`: iniciar sesión con usuario/contraseña; hash seguro, usuarios activos, rechazo de credenciales incorrectas y autorización por rol en **cada operación**, no solo en el menú. Probar `TC-AUTH-01` a `TC-AUTH-06` para `ADM`, `DOC` y `ALU`.
+- [ ] `US-AUTH-01`: iniciar sesión con usuario/contraseña; hash seguro, usuarios activos, rechazo de credenciales incorrectas y autorización por rol en **cada operación**, no solo en el menú. Probar `TC-AUTH-01` a `TC-AUTH-06` para `ADMIN`, `ADMINISTRATIVO`, `PROFESOR` y `ALUMNO`.
 - [ ] `US-ALU-01..04`: alta, consulta por DNI, modificación y baja lógica de alumnos. Validar nombre, apellido, DNI único, email y teléfono; alta `ACTIVO`; última modificación; preservar historial y bloquear nuevas inscripciones de inactivos. Probar `TC-ALU-01..12`.
-- [ ] `US-PROF-01..03`: alta, modificación y baja lógica de docentes; DNI único, email válido, estado `ACTIVO`, historial conservado y prohibición de nuevas asignaciones de inactivos. Probar `TC-PROF-01..07`.
+- [ ] `US-PROF-01..03`: alta, modificación y baja lógica de profesores; DNI único, email válido, estado `ACTIVO`, historial conservado y prohibición de nuevas asignaciones de inactivos. Probar `TC-PROF-01..07`.
 - [ ] `US-MAT-01..03`: alta, modificación y baja lógica de materias; código/nombre obligatorio, código único cuando se use, estado `ACTIVA`, historial conservado y bloqueo de inscripciones nuevas a materias inactivas. Probar `TC-MAT-01..06`.
 - [ ] `US-MAT-04`: definir correlativas múltiples, rechazando autorreferencias y ciclos de cualquier longitud. Probar `TC-MAT-07..09`.
-- [ ] `US-PROF-04`: asignar docentes activos a materias activas y mostrar la asignación. Acordar si hay docente responsable y co-docentes. Probar `TC-PROF-08..10`.
+- [ ] `US-PROF-04`: asignar un profesor activo a cada comisión de una materia activa y mostrar la asignación. Probar `TC-PROF-08..10`.
 - [ ] Crear/consultar la oferta de cursadas y clases por comisión, período y horario para que inscripciones, asistencia y exámenes se vinculen a una instancia concreta; el diagrama incluye estos conceptos, pero las operaciones exactas aún requieren definición.
 
 ### 3. Inscripciones, asistencia y regularidad
 
 - [ ] `US-INS-01`: inscribir alumno activo en materia activa sin duplicar la cursada; exigir correlativas aprobadas e informar cuáles faltan. Probar `TC-INS-01..04` y bloqueo de materia inactiva (`TC-MAT-06`).
-- [ ] `US-ASIS-01`: docente autenticado y asignado registra presente/ausente por alumno inscripto y fecha/clase; impedir modificaciones de otro docente. Probar `TC-ASIS-01..02`.
+- [ ] `US-ASIS-01`: el profesor de la comisión registra presente/ausente por alumno inscripto, horario y fecha; impedir modificaciones de otro profesor. Probar `TC-ASIS-01..02`.
 - [ ] `US-ASIS-02`: recalcular regularidad automáticamente con umbral inclusivo de **70 %**, usando la base de clases definida. Probar 70 % exacto y 69,9 % (`TC-ASIS-03..04`).
 - [ ] `US-ASIS-03`: consulta del historial por alumno con presentes, ausentes, justificadas, porcentaje y condición; resolver «sin asistencias». Probar `TC-ASIS-05..07`.
 - [ ] `US-ASIS-04`: justificar inasistencia con motivo obligatorio, certificado opcional y estado `JUSTIFICADA`; aplicar al porcentaje la regla acordada, sin penalizar al alumno.
@@ -94,9 +95,9 @@ Decisiones tomadas el 22/11/2026. Se detallan como reglas `RN-XX` en [`Documenta
 
 ### 4. Evaluaciones, notas y actas
 
-- [ ] `US-CAL-01`: docente asignado carga parciales de alumnos inscriptos; validar escala acordada y rechazar fuera de rango. Probar `TC-CAL-01..02`.
+- [ ] `US-CAL-01`: el profesor de la comisión carga parciales de alumnos inscriptos; validar escala acordada y rechazar fuera de rango. Probar `TC-CAL-01..02`.
 - [ ] `US-CAL-02`: cargar final solo para alumno regular y con correlativas aprobadas; con nota **>= 6** marcar `APROBADO`, con nota **< 6**, `DESAPROBADO`; impedir final de `NO_REGULAR`. Probar `TC-CAL-03..05`.
-- [ ] `US-CAL-03`: permitir corrección de nota a docente autorizado con auditoría de valor anterior/nuevo, usuario y fecha; rechazar cambios no autorizados o en acta cerrada.
+- [ ] `US-CAL-03`: permitir corrección de nota al profesor de la comisión con auditoría de valor anterior/nuevo, usuario y fecha; rechazar cambios no autorizados o en acta cerrada.
 - [ ] `US-CAL-04`: permitir recuperatorio solo de parcial desaprobado; aplicar reemplazo o promedio según decisión previa y comprobar ambos resultados de recuperación.
 - [ ] `US-CAL-05`: calcular automáticamente promedio y condición; acordar antes el efecto de recuperatorios y los estados `PROMOCIONADO`, `REGULAR`, `DESAPROBADO`.
 - [ ] `US-CAL-06`: cerrar acta final solo si están todas las notas finales exigibles; bloquear edición posterior y permitir excepciones administrativas auditadas. Firma digital: **opcional**.
@@ -107,8 +108,8 @@ Decisiones tomadas el 22/11/2026. Se detallan como reglas `RN-XX` en [`Documenta
 - [ ] `US-REP-02`: rendimiento por alumno con parciales, final, estado y promedio si aplica; sin notas, informar `Sin calificaciones registradas`. Probar `TC-REP-03..04`.
 - [ ] Reporte adicional del anexo: alumnos en riesgo por asistencia <70 % o promedio <6, distinguiendo riesgo académico y riesgo de perder regularidad.
 - [ ] Libro de actas con alumno, parciales, recuperatorios, final y condición; exportación PDF, Excel y CSV según el anexo. Confirmar formato y contenido de cada exportación antes de implementarla.
-- [ ] Registrar quién cargó asistencia y quién modificó notas, cuándo y valores anteriores/nuevos; proteger los eventos de auditoría y verificar accesos de `DOC` asignado y `ADM` para excepciones.
-- [ ] Escribir pruebas automatizadas por cada regla de negocio y por cada `TC-*` citado; incluir controles de autorización, persistencia, cierres, duplicados y límites 70 %/6. Validar flujos completos para administrativo, docente y alumno.
+- [ ] Registrar quién cargó asistencia y quién modificó notas, cuándo y valores anteriores/nuevos; proteger los eventos de auditoría y verificar accesos del profesor de la comisión y de `ADMINISTRATIVO`/`ADMIN` para excepciones.
+- [ ] Escribir pruebas automatizadas por cada regla de negocio y por cada `TC-*` citado; incluir controles de autorización, persistencia, cierres, duplicados y límites 70 %/6. Validar flujos completos para administrador, administrativo, profesor y alumno.
 - [ ] Entregar en `document/` los diagramas **de arquitectura, clases, secuencia, estados académicos del alumno y modelo de datos**. Revisar que coincidan con el sistema final y actualizar el boceto si cambia el modelo.
 - [ ] Completar README con descripción, integrantes, requisitos, configuración, arranque, pruebas y acceso de demostración; añadir Docker e instrucciones para ejecutar aplicación y base de datos desde cero; comprobarlo en un entorno limpio.
 - [ ] Mantener Git/GitHub y ramas Git Flow; dejar el repositorio entregable y preparar la defensa de MVC, POO, persistencia, Git y reglas de negocio por integrante.

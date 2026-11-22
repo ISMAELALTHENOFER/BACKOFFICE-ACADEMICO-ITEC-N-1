@@ -2,88 +2,150 @@
 !pragma layout smetana
 skinparam shadowing false
 skinparam classAttributeIconSize 0
-title Diagrama de clases de diseño - modelo de dominio
+title Diagrama de clases de diseño - modelo de dominio (paquete model)
 
-package "domain.model" {
-  class Usuario {
-    - id : long
-    - nombreUsuario : String
-    - hashContrasena : String
-    - rol : Rol
-    - activo : boolean
-  }
-  class Alumno {
-    - id : long
-    - dni : String
-    - nombre : String
-    - apellido : String
-    - email : String
-    - telefono : String
-    - estado : EstadoPersona
-  }
-  class Materia {
-    - id : long
-    - codigo : String
-    - nombre : String
-    - estado : EstadoMateria
-    - correlativas : List<Materia>
-  }
-  class Comision {
-    - id : long
-    - codigo : String
-    - cicloLectivo : int
-    - asistenciaCerrada : boolean
-  }
-  class Inscripcion {
-    - id : long
-    - estadoAcademico : EstadoAcademico
-    - porcentajeAsistencia : BigDecimal
-    - promedio : BigDecimal
-  }
-  class Asistencia {
-    - id : long
-    - estado : EstadoAsistencia
-    - motivo : String
-  }
-  class Calificacion {
-    - id : long
-    - nota : BigDecimal
-    - tipo : TipoEvaluacion
-  }
-  class ActaFinal {
-    - id : long
-    - estado : EstadoActa
-    - fechaCierre : LocalDateTime
-  }
-  enum Rol {
-    ADM
-    DOC
-    ALU
-  }
-  enum EstadoAcademico {
-    EN_CURSO
-    REGULAR
-    NO_REGULAR
-    PROMOCIONADO
-    APROBADO
-    DESAPROBADO
-    BAJA
-  }
-  enum EstadoAsistencia {
-    PRESENTE
-    AUSENTE
-    JUSTIFICADA
-  }
+class User {
+  - id : Long
+  - username : String
+  - password : String
+  - nombre : String
+  - apellido : String
+  - dni : String
+  - email : String
+  - telefono : String
+  - roles : Set<Rol>
+  - activo : boolean
+}
+class Alumno {
+  - id : Long
+  - estado : EstadoPersona
+}
+class Profesor {
+  - id : Long
+  - estado : EstadoPersona
+}
+class AlumnoCarrera {
+  - id : Long
+  - anioIngreso : Integer
+}
+class Carrera {
+  - id : Long
+  - nombre : String
+}
+class PlanEstudio {
+  - id : Long
+  - nombre : String
+  - fechaInicio : LocalDate
+  - fechaFin : LocalDate
+}
+class Materia {
+  - id : Long
+  - codigo : String
+  - nombre : String
+  - anio : Integer
+  - cuatrimestre : Integer
+  - estado : EstadoMateria
+  - correlativas : List<Materia>
+}
+class Cuatrimestre {
+  - id : Long
+  - anio : Integer
+  - numero : Integer
+  - fechaInicio : LocalDate
+  - fechaFin : LocalDate
+}
+class ComisionMateria {
+  - id : Long
+  - asistenciaCerrada : boolean
+}
+class HorarioClase {
+  - id : Long
+  - diaSemana : DayOfWeek
+}
+class ModuloHorario {
+  - id : Long
+  - numero : int
+  - horaInicio : LocalTime
+  - horaFin : LocalTime
+}
+class AlumnoInscripto {
+  - id : Long
+  - estado : EstadoCursada
+  - notaFinal : Double
+  - porcentajeAsistencia : BigDecimal
+  - promedio : BigDecimal
+}
+class Asistencia {
+  - id : Long
+  - fecha : LocalDate
+  - estado : EstadoAsistencia
+  - motivo : String
+  - certificado : String
+}
+class Examen {
+  - id : Long
+  - fecha : LocalDate
+  - tipo : TipoEvaluacion
+  - descripcion : String
+}
+class Nota {
+  - id : Long
+  - valor : Double
+}
+class ActaFinal {
+  - id : Long
+  - estado : EstadoActa
+  - fechaCierre : LocalDateTime
+}
+enum Rol {
+  ADMIN
+  ADMINISTRATIVO
+  PROFESOR
+  ALUMNO
+}
+enum EstadoCursada {
+  EN_CURSO
+  REGULAR
+  PROMOCIONADO
+  APROBADO
+  DESAPROBADO
+  RECURSA
+  BAJA
+}
+enum TipoEvaluacion {
+  TP
+  PARCIAL
+  RECUPERATORIO
+  FINAL
+}
+enum EstadoAsistencia {
+  PRESENTE
+  AUSENTE
+  JUSTIFICADA
 }
 
-
-Alumno "1" -- "0..*" Inscripcion
-Comision "1" -- "0..*" Inscripcion
-Materia "1" -- "0..*" Comision
-Inscripcion "1" -- "0..*" Asistencia
-Inscripcion "1" -- "0..*" Calificacion
-Usuario --> Rol
-Inscripcion --> EstadoAcademico
+User "1" -- "0..1" Alumno
+User "1" -- "0..1" Profesor
+User --> Rol
+Alumno "1" *-- "0..*" AlumnoCarrera
+AlumnoCarrera "0..*" --> "1" Carrera
+AlumnoCarrera "0..*" --> "1" PlanEstudio
+Carrera "1" o-- "1..*" PlanEstudio
+PlanEstudio "1" o-- "1..*" Materia
+ComisionMateria "0..*" --> "1" Materia
+ComisionMateria "0..*" --> "1" Cuatrimestre
+ComisionMateria "0..*" --> "1" Profesor
+ComisionMateria "1" o-- "1..*" HorarioClase
+HorarioClase "0..*" o-- "1..*" ModuloHorario
+ComisionMateria "1" o-- "0..*" Examen
+ComisionMateria "1" o-- "0..*" AlumnoInscripto
+AlumnoCarrera "1" o-- "0..*" AlumnoInscripto
+AlumnoInscripto "1" *-- "0..*" Asistencia
+Asistencia "0..*" --> "1" HorarioClase
+AlumnoInscripto "1" *-- "0..*" Nota
+Examen "1" o-- "0..*" Nota
+Examen --> TipoEvaluacion
+AlumnoInscripto --> EstadoCursada
 Asistencia --> EstadoAsistencia
-ActaFinal --> Calificacion : notas finales
+ActaFinal "0..1" --> "1" Examen
 @enduml

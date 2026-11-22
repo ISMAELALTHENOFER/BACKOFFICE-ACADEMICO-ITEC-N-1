@@ -19,7 +19,7 @@ from docx.shared import Cm, Pt, RGBColor
 from contenido import (
     AUTOR, CASOS_DE_USO, CONTRATOS, ESCENARIO, INTRODUCCION, PAQUETES,
     PERSONAL, REGLAS, REQUISITOS, REQUISITOS_NO_FUNCIONALES, TITULO,
-    TRAZABILIDAD, USUARIOS, FECHA, CAPAS, ENTORNO, NOTAS_MODELO_DATOS,
+    TRAZABILIDAD, USUARIOS, FECHA, CAPAS, ENTORNO, NOTAS_MODELO_DATOS, EXTENSIONES_MODELO,
 )
 
 RAIZ = Path(__file__).resolve().parents[1]
@@ -273,6 +273,11 @@ def generar():
     parrafos(doc, ["Representa los conceptos del dominio académico y sus asociaciones, "
                    "sin decisiones de implementación."])
     imagen(doc, "clases-analisis.png", "Diagrama de clases de análisis", ancho_para("clases-analisis.png"))
+    parrafos(doc, ["Además de los conceptos del dominio académico base (usuarios, alumnos, profesores, "
+                   "carreras, planes, materias, cuatrimestres, comisiones, horarios, exámenes, notas e "
+                   "inscripciones), el modelo incorpora los siguientes elementos para cubrir los "
+                   "requerimientos funcionales:"])
+    vinetas(doc, EXTENSIONES_MODELO)
 
     doc.add_heading("8. Casos de uso", level=1)
     parrafos(doc, ["Se especifica cada caso de uso. Para las operaciones más significativas se "
@@ -282,10 +287,10 @@ def generar():
         caso_de_uso(doc, uc)
 
     doc.add_heading("9. Diagrama de estados (estado académico del alumno)", level=1)
-    parrafos(doc, ["El estado académico pertenece a cada inscripción (cursada) del alumno. "
-                   "Mientras la cursada está EN_CURSO, la condición de regularidad se recalcula "
-                   "automáticamente con cada registro de asistencia; al cerrar la asistencia se "
-                   "congela y se fija la condición de cursada."])
+    parrafos(doc, ["El estado académico pertenece a cada cursada del alumno (AlumnoInscripto). "
+                   "Mientras la cursada está EN_CURSO, la condición de asistencia (REGULAR o NO_REGULAR) "
+                   "se recalcula automáticamente con cada registro de asistencia; al cerrar la asistencia "
+                   "se congela y se fija el estado de la cursada."])
     imagen(doc, "estados-academicos.png", "Diagrama de estados del alumno en una cursada")
 
     doc.add_heading("10. Diagrama de clases de diseño", level=1)
