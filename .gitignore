@@ -27,3 +27,6 @@ replay_pid*
 
 # Python
 __pycache__/
+
+# Archivos temporales de Office
+~$*
