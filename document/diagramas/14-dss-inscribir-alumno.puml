@@ -1,0 +1,18 @@
+@startuml dss-inscribir-alumno
+skinparam shadowing false
+title DSS - UC-08 Inscribir alumno a cursada
+actor "Administrativo" as U
+participant ":Sistema" as S
+U -> S : buscarAlumno(dni)
+S --> U : datos del alumno y estado
+U -> S : seleccionarComision(comisionId)
+S --> U : materia, ciclo lectivo y horarios
+U -> S : confirmarInscripcion()
+alt cumple todas las reglas
+  S --> U : inscripción registrada (EN_CURSO)
+else correlativas pendientes
+  S --> U : lista de correlativas faltantes
+else alumno/materia inactivos o inscripción duplicada
+  S --> U : motivo del rechazo
+end
+@enduml

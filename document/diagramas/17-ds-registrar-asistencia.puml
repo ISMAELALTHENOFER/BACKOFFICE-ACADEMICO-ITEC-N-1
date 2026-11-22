@@ -1,0 +1,31 @@
+@startuml ds-registrar-asistencia
+skinparam shadowing false
+title DS - confirmarAsistencia()
+actor Docente
+participant ":AsistenciaController" as C
+participant ":AsistenciaService" as S
+participant ":Autorizador" as AU
+participant ":ClaseRepository" as CL
+participant ":AsistenciaRepository" as AR
+participant ":CalculadoraRegularidad" as CALC
+participant ":InscripcionRepository" as IR
+participant ":AuditoriaService" as AUD
+
+Docente -> C : guardar()
+C -> S : registrar(claseId, marcas)
+S -> CL : buscarPorId(claseId)
+CL --> S : clase (con comisión)
+S -> AU : exigirDocenteAsignado(comisionId)
+S -> S : validar comisión con asistencia abierta
+loop por cada marca
+  S -> AR : guardarOActualizar(inscripcionId, claseId, estado)
+  S -> AUD : registrar("CARGA_ASISTENCIA", "asistencia", id, anterior, nuevo, null)
+  S -> AR : listarPorInscripcion(inscripcionId)
+  AR --> S : asistencias
+  S -> CALC : porcentaje(asistencias)
+  CALC --> S : porcentaje
+  S -> IR : actualizarPorcentaje(inscripcionId, porcentaje)
+end
+S --> C : ok
+C --> Docente : confirmación con condición provisoria
+@enduml

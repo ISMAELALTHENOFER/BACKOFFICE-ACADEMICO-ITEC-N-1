@@ -1,0 +1,44 @@
+@startuml arquitectura
+!pragma layout smetana
+skinparam shadowing false
+skinparam componentStyle rectangle
+title Arquitectura en capas (MVC) + base de datos relacional MySQL
+
+actor "Usuario\n(ADM / DOC / ALU)" as U
+
+node "Aplicación Java (escritorio: .jar ejecutable / web: contenedor Docker)" {
+  package "Presentación (Vista + Controlador)" as P {
+    [Vistas\n(pantallas o páginas)] as V
+    [Controladores] as C
+  }
+  package "Aplicación / Negocio (Modelo)" as N {
+    [Servicios de aplicación] as S
+    [Reglas de dominio\n(regularidad, condición,\ncorrelativas)] as R
+    [Seguridad\n(sesión, hash, autorización)] as SEC
+    [Entidades de dominio] as E
+  }
+  package "Persistencia" as PE {
+    [Interfaces de repositorio] as RI
+    [Implementación de repositorios\n(acceso a MySQL)] as RJ
+    [Configuración de conexión\n(externa al código)] as CF
+  }
+}
+
+node "Contenedor Docker" {
+  database "MySQL 8\nbase backoffice_itec" as DB
+  storage "Volumen de datos" as VOL
+}
+
+U --> V : interactúa
+V --> C : acciones del usuario
+C --> S : invoca casos de uso
+C ..> SEC : sesión activa
+S --> SEC : autoriza cada operación
+S --> R : aplica reglas
+S --> E
+S --> RI : usa
+RJ ..|> RI
+RJ --> CF
+CF --> DB : conexión SQL (TCP 3306)
+DB --> VOL
+@enduml

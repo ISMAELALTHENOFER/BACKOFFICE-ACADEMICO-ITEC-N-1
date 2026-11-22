@@ -1,0 +1,89 @@
+@startuml clases-diseno-dominio
+!pragma layout smetana
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+title Diagrama de clases de diseño - modelo de dominio
+
+package "domain.model" {
+  class Usuario {
+    - id : long
+    - nombreUsuario : String
+    - hashContrasena : String
+    - rol : Rol
+    - activo : boolean
+  }
+  class Alumno {
+    - id : long
+    - dni : String
+    - nombre : String
+    - apellido : String
+    - email : String
+    - telefono : String
+    - estado : EstadoPersona
+  }
+  class Materia {
+    - id : long
+    - codigo : String
+    - nombre : String
+    - estado : EstadoMateria
+    - correlativas : List<Materia>
+  }
+  class Comision {
+    - id : long
+    - codigo : String
+    - cicloLectivo : int
+    - asistenciaCerrada : boolean
+  }
+  class Inscripcion {
+    - id : long
+    - estadoAcademico : EstadoAcademico
+    - porcentajeAsistencia : BigDecimal
+    - promedio : BigDecimal
+  }
+  class Asistencia {
+    - id : long
+    - estado : EstadoAsistencia
+    - motivo : String
+  }
+  class Calificacion {
+    - id : long
+    - nota : BigDecimal
+    - tipo : TipoEvaluacion
+  }
+  class ActaFinal {
+    - id : long
+    - estado : EstadoActa
+    - fechaCierre : LocalDateTime
+  }
+  enum Rol {
+    ADM
+    DOC
+    ALU
+  }
+  enum EstadoAcademico {
+    EN_CURSO
+    REGULAR
+    NO_REGULAR
+    PROMOCIONADO
+    APROBADO
+    DESAPROBADO
+    BAJA
+  }
+  enum EstadoAsistencia {
+    PRESENTE
+    AUSENTE
+    JUSTIFICADA
+  }
+}
+
+
+Alumno "1" -- "0..*" Inscripcion
+Comision "1" -- "0..*" Inscripcion
+Materia "1" -- "0..*" Comision
+Inscripcion "1" -- "0..*" Asistencia
+Inscripcion "1" -- "0..*" Calificacion
+Usuario --> Rol
+Inscripcion --> EstadoAcademico
+Asistencia --> EstadoAsistencia
+ActaFinal --> Calificacion : notas finales
+@enduml

@@ -1,0 +1,27 @@
+@startuml ds-crear-alumno
+skinparam shadowing false
+title DS - crearAlumno(dni, nombre, apellido, email, teléfono)
+actor Administrativo
+participant ":AlumnoController" as C
+participant ":AlumnoService" as S
+participant ":Autorizador" as AU
+participant ":AlumnoRepository" as R
+
+Administrativo -> C : guardar()
+C -> S : crear(datos)
+S -> AU : exigirRol(ADM)
+S -> S : validarCampos(datos)
+S -> R : existePorDni(dni)
+R --> S : boolean
+alt DNI disponible
+  create participant "a:Alumno" as A
+  S -> A : new Alumno(datos, ACTIVO)
+  S -> R : guardar(a)
+  R --> S : a (con id)
+  S --> C : a
+  C --> Administrativo : confirmación
+else DNI existente
+  S --> C : ReglaNegocioException("DNI duplicado")
+  C --> Administrativo : mensaje de error
+end
+@enduml

@@ -1,0 +1,115 @@
+@startuml clases-analisis
+!pragma layout smetana
+skinparam shadowing false
+hide methods
+hide circle
+
+class Usuario {
+  nombreUsuario
+  rol
+  activo
+}
+class Alumno {
+  dni
+  nombre
+  apellido
+  email
+  telefono
+  estado
+}
+class Docente {
+  dni
+  nombre
+  apellido
+  email
+  telefono
+  estado
+}
+class Carrera {
+  codigo
+  nombre
+}
+class PlanEstudio {
+  nombre
+  anio
+}
+class Materia {
+  codigo
+  nombre
+  anioCursada
+  cuatrimestre
+  estado
+}
+class Comision {
+  codigo
+  cicloLectivo
+  cuatrimestre
+  asistenciaCerrada
+}
+class Horario {
+  diaSemana
+  horaInicio
+  horaFin
+  aula
+}
+class Clase {
+  fecha
+  tema
+}
+class AsignacionDocente {
+  rolDocente
+  activa
+}
+class Inscripcion {
+  fecha
+  estadoAcademico
+  porcentajeAsistencia
+  promedio
+}
+class Asistencia {
+  estado
+  motivo
+  certificado
+}
+class Evaluacion {
+  tipo
+  fecha
+}
+class Calificacion {
+  nota
+  observaciones
+  fecha
+}
+class ActaFinal {
+  estado
+  fechaCierre
+}
+class RegistroAuditoria {
+  accion
+  entidad
+  valorAnterior
+  valorNuevo
+  fecha
+  motivo
+}
+
+Usuario "0..1" -- "0..1" Alumno
+Usuario "0..1" -- "0..1" Docente
+Carrera "1" -- "1..*" PlanEstudio
+PlanEstudio "1" -- "1..*" Materia
+Materia "0..*" -- "0..*" Materia : correlativa de >
+Materia "1" -- "0..*" Comision
+Comision "1" -- "1..*" Horario
+Comision "1" -- "0..*" Clase
+Comision "1" -- "1..*" AsignacionDocente
+Docente "1" -- "0..*" AsignacionDocente
+Alumno "1" -- "0..*" Inscripcion
+Comision "1" -- "0..*" Inscripcion
+Inscripcion "1" -- "0..*" Asistencia
+Clase "1" -- "0..*" Asistencia
+Comision "1" -- "0..*" Evaluacion
+Evaluacion "1" -- "0..*" Calificacion
+Inscripcion "1" -- "0..*" Calificacion
+Evaluacion "1" -- "0..1" ActaFinal
+Usuario "1" -- "0..*" RegistroAuditoria : realiza >
+@enduml

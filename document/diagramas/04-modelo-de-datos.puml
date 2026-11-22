@@ -1,0 +1,207 @@
+@startuml modelo-de-datos
+!pragma layout smetana
+skinparam shadowing false
+skinparam linetype ortho
+hide circle
+hide methods
+
+entity usuario {
+  * id : BIGINT <<PK>>
+  --
+  * nombre_usuario : VARCHAR(50) <<UQ>>
+  * hash_contrasena : VARCHAR(255)
+  * rol : ENUM('ADM','DOC','ALU')
+  * activo : BOOLEAN
+  * fecha_alta : DATETIME
+}
+
+entity alumno {
+  * id : BIGINT <<PK>>
+  --
+  * dni : VARCHAR(10) <<UQ>>
+  * nombre : VARCHAR(80)
+  * apellido : VARCHAR(80)
+  * email : VARCHAR(120)
+  telefono : VARCHAR(30)
+  * estado : ENUM('ACTIVO','INACTIVO')
+  usuario_id : BIGINT <<FK,UQ>>
+  * fecha_alta : DATETIME
+  * fecha_modificacion : DATETIME
+}
+
+entity docente {
+  * id : BIGINT <<PK>>
+  --
+  * dni : VARCHAR(10) <<UQ>>
+  * nombre : VARCHAR(80)
+  * apellido : VARCHAR(80)
+  * email : VARCHAR(120)
+  telefono : VARCHAR(30)
+  * estado : ENUM('ACTIVO','INACTIVO')
+  usuario_id : BIGINT <<FK,UQ>>
+  * fecha_alta : DATETIME
+  * fecha_modificacion : DATETIME
+}
+
+entity carrera {
+  * id : BIGINT <<PK>>
+  --
+  * codigo : VARCHAR(20) <<UQ>>
+  * nombre : VARCHAR(120)
+}
+
+entity plan_estudio {
+  * id : BIGINT <<PK>>
+  --
+  * carrera_id : BIGINT <<FK>>
+  * nombre : VARCHAR(80)
+  * anio : SMALLINT
+}
+
+entity materia {
+  * id : BIGINT <<PK>>
+  --
+  * plan_estudio_id : BIGINT <<FK>>
+  * codigo : VARCHAR(20) <<UQ>>
+  * nombre : VARCHAR(120)
+  * anio_cursada : TINYINT
+  * cuatrimestre : TINYINT
+  * estado : ENUM('ACTIVA','INACTIVA')
+}
+
+entity correlatividad {
+  * materia_id : BIGINT <<PK,FK>>
+  * correlativa_id : BIGINT <<PK,FK>>
+}
+
+entity comision {
+  * id : BIGINT <<PK>>
+  --
+  * materia_id : BIGINT <<FK>>
+  * codigo : VARCHAR(20)
+  * ciclo_lectivo : SMALLINT
+  * cuatrimestre : TINYINT
+  * asistencia_cerrada : BOOLEAN
+  fecha_cierre_asistencia : DATETIME
+  UQ(materia_id, codigo, ciclo_lectivo)
+}
+
+entity horario {
+  * id : BIGINT <<PK>>
+  --
+  * comision_id : BIGINT <<FK>>
+  * dia_semana : ENUM('LUNES'..'VIERNES')
+  * hora_inicio : TIME
+  * hora_fin : TIME
+  aula : VARCHAR(30)
+}
+
+entity clase {
+  * id : BIGINT <<PK>>
+  --
+  * comision_id : BIGINT <<FK>>
+  * fecha : DATE
+  tema : VARCHAR(200)
+  UQ(comision_id, fecha)
+}
+
+entity asignacion_docente {
+  * id : BIGINT <<PK>>
+  --
+  * comision_id : BIGINT <<FK>>
+  * docente_id : BIGINT <<FK>>
+  * rol_docente : ENUM('RESPONSABLE','AUXILIAR')
+  * activa : BOOLEAN
+  UQ(comision_id, docente_id)
+}
+
+entity inscripcion {
+  * id : BIGINT <<PK>>
+  --
+  * alumno_id : BIGINT <<FK>>
+  * comision_id : BIGINT <<FK>>
+  * fecha : DATETIME
+  * estado_academico : ENUM('EN_CURSO','REGULAR','NO_REGULAR',\n'PROMOCIONADO','APROBADO','DESAPROBADO','BAJA')
+  porcentaje_asistencia : DECIMAL(5,2)
+  promedio : DECIMAL(4,2)
+  UQ(alumno_id, comision_id)
+}
+
+entity asistencia {
+  * id : BIGINT <<PK>>
+  --
+  * inscripcion_id : BIGINT <<FK>>
+  * clase_id : BIGINT <<FK>>
+  * estado : ENUM('PRESENTE','AUSENTE','JUSTIFICADA')
+  motivo : VARCHAR(255)
+  certificado : VARCHAR(255)
+  * registrado_por : BIGINT <<FK usuario>>
+  * fecha_registro : DATETIME
+  UQ(inscripcion_id, clase_id)
+}
+
+entity evaluacion {
+  * id : BIGINT <<PK>>
+  --
+  * comision_id : BIGINT <<FK>>
+  * tipo : ENUM('PARCIAL_1','PARCIAL_2','RECUPERATORIO_1',\n'RECUPERATORIO_2','TRABAJO_PRACTICO','FINAL')
+  * fecha : DATE
+  descripcion : VARCHAR(200)
+}
+
+entity calificacion {
+  * id : BIGINT <<PK>>
+  --
+  * inscripcion_id : BIGINT <<FK>>
+  * evaluacion_id : BIGINT <<FK>>
+  * nota : DECIMAL(3,1) CHECK 0..10
+  observaciones : VARCHAR(255)
+  * docente_id : BIGINT <<FK>>
+  * fecha : DATETIME
+  UQ(inscripcion_id, evaluacion_id)
+}
+
+entity acta_final {
+  * id : BIGINT <<PK>>
+  --
+  * evaluacion_id : BIGINT <<FK,UQ>>
+  * estado : ENUM('ABIERTA','CERRADA')
+  fecha_cierre : DATETIME
+  cerrada_por : BIGINT <<FK usuario>>
+}
+
+entity registro_auditoria {
+  * id : BIGINT <<PK>>
+  --
+  * accion : VARCHAR(50)
+  * entidad : VARCHAR(50)
+  * entidad_id : BIGINT
+  valor_anterior : TEXT
+  valor_nuevo : TEXT
+  motivo : VARCHAR(255)
+  * usuario_id : BIGINT <<FK>>
+  * fecha : DATETIME
+}
+
+usuario |o--o| alumno
+usuario |o--o| docente
+carrera ||--|{ plan_estudio
+plan_estudio ||--|{ materia
+materia ||--o{ correlatividad
+materia ||--o{ correlatividad
+materia ||--o{ comision
+comision ||--|{ horario
+comision ||--o{ clase
+comision ||--|{ asignacion_docente
+docente ||--o{ asignacion_docente
+alumno ||--o{ inscripcion
+comision ||--o{ inscripcion
+inscripcion ||--o{ asistencia
+clase ||--o{ asistencia
+comision ||--o{ evaluacion
+evaluacion ||--o{ calificacion
+inscripcion ||--o{ calificacion
+docente ||--o{ calificacion
+evaluacion ||--o| acta_final
+usuario ||--o{ registro_auditoria
+@enduml

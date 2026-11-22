@@ -1,0 +1,28 @@
+@startuml ds-iniciar-sesion
+skinparam shadowing false
+title DS - iniciarSesion(nombreUsuario, contraseña)
+actor Usuario
+participant ":LoginController" as C
+participant ":AuthService" as A
+participant ":UsuarioRepository" as R
+participant ":PasswordHasher" as H
+participant ":Sesion" as SE
+
+Usuario -> C : ingresar()
+C -> A : iniciarSesion(nombreUsuario, clave)
+A -> R : buscarPorNombreUsuario(nombreUsuario)
+R --> A : Optional<Usuario>
+alt usuario existe y activo
+  A -> H : verificar(clave, usuario.hashContrasena)
+  H --> A : boolean
+end
+alt verificación correcta
+  A -> SE : iniciar(usuario)
+  A --> C : usuario
+  C -> C : abrirMenu(usuario.rol)
+  C --> Usuario : menú según rol
+else falla
+  A --> C : CredencialesInvalidasException
+  C --> Usuario : mensaje de error genérico
+end
+@enduml

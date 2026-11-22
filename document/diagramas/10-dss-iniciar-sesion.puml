@@ -1,0 +1,12 @@
+@startuml dss-iniciar-sesion
+skinparam shadowing false
+title DSS - UC-01 Iniciar sesión
+actor "Usuario" as U
+participant ":Sistema" as S
+U -> S : iniciarSesion(nombreUsuario, contraseña)
+alt credenciales válidas y usuario activo
+  S --> U : menú habilitado según rol (ADM / DOC / ALU)
+else credenciales inválidas o usuario inactivo
+  S --> U : "Usuario o contraseña incorrectos"
+end
+@enduml

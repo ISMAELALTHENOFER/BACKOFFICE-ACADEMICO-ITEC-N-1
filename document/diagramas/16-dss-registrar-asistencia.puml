@@ -1,0 +1,17 @@
+@startuml dss-registrar-asistencia
+skinparam shadowing false
+title DSS - UC-09 Registrar asistencia
+actor "Docente" as U
+participant ":Sistema" as S
+U -> S : seleccionarClase(claseId)
+S --> U : lista de alumnos inscriptos
+loop por cada alumno
+  U -> S : marcarAsistencia(inscripcionId, PRESENTE | AUSENTE)
+end
+U -> S : confirmarAsistencia()
+alt docente asignado y asistencia abierta
+  S --> U : asistencia guardada y regularidad recalculada
+else no asignado o asistencia cerrada
+  S --> U : "Operación no permitida"
+end
+@enduml

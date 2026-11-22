@@ -15,8 +15,9 @@ Este documento convierte el enunciado, el backlog, el anexo y el diagrama en un 
 
 ## Decisión técnica confirmada
 
-- Aplicación de escritorio en **Java**, con **JavaFX** para la interfaz y **MySQL** como base de datos.
-- Mantener la arquitectura en capas **MVC**, como exige el enunciado; el diagrama de arquitectura debe mostrar cómo se separan la interfaz JavaFX, las reglas de aplicación/negocio y el acceso a MySQL.
+- El sistema se implementa en **Java** con **MySQL** en dos variantes que comparten análisis, reglas, arquitectura MVC y modelo de datos: primero una **aplicación de escritorio con JavaFX** y luego una **aplicación web con Spring Boot**.
+- La documentación de análisis y diseño (`Documentacion_Backoffice_Academico_ITEC.docx`) es agnóstica a la tecnología de presentación y vale para ambas variantes.
+- Mantener la arquitectura en capas **MVC**, como exige el enunciado; el diagrama de arquitectura debe mostrar cómo se separan la presentación (pantallas o páginas), las reglas de aplicación/negocio y el acceso a MySQL.
 - La decisión elimina las alternativas Web, API como producto principal y base no relacional. Los endpoints del backlog siguen siendo opcionales y no forman parte del alcance salvo que se acuerde una API adicional.
 
 ## Cómo usar el proyecto guía
@@ -29,7 +30,7 @@ El repositorio de referencia `web-2026 (guia)` contiene un backoffice principalm
 | Vocabulario y entidades académicas existentes: `Alumno`, `Profesor`, `Materia`, `Asistencia`, `Nota` y `AlumnoInscripto`; asistencia se relaciona con inscripción y horario (`proyecto base/backoffice-itec-master/backoffice-itec-core/src/main/java/ar/edu/itec1misiones/model/Asistencia.java:7-26`). | Comparar esas entidades con las historias y el diagrama fuente; conservar solo las que representen reglas acordadas y completar relaciones/campos faltantes. | No considerar una clase/modelo o una lista del README como prueba de que el flujo funcional está implementado. |
 | Perfiles de configuración y pruebas del proyecto guía como ejemplos para estudiar. | Definir configuración propia para MySQL y pruebas de comportamiento de cada regla y criterio `TC-*`. | El README menciona PostgreSQL, pero el perfil de desarrollo observado configura H2 (`proyecto base/backoffice-itec-master/backoffice-itec-api/src/main/resources/application-dev.yml:1-15`); las pruebas observadas son limitadas. No reutilizar esa configuración como verdad para este sistema. |
 
-**Conclusión:** el proyecto guía sirve para orientar el vocabulario del dominio y la separación por capas, no para copiar su plataforma ni asumir que ya resuelve las reglas. JavaFX + MySQL siguen siendo la arquitectura objetivo; el alcance se verifica contra los documentos del ITEC y pruebas propias.
+**Conclusión:** el proyecto guía sirve para orientar el vocabulario del dominio y la separación por capas, no para copiar su plataforma ni asumir que ya resuelve las reglas. La arquitectura objetivo es MVC + MySQL en ambas variantes (JavaFX y Spring Boot); el alcance se verifica contra los documentos del ITEC y pruebas propias.
 
 ## Inventario de documentación y entregables pendientes
 
@@ -37,37 +38,40 @@ Este inventario refleja el estado observado del repositorio al revisar los requi
 
 | Entregable | Estado actual | Mínimo para darlo por terminado |
 | --- | --- | --- |
-| `README.md` | Existe, pero solo tiene el título del repositorio. | Describir objetivo y alcance, integrantes, Java/JavaFX/MySQL, requisitos previos, configuración sin secretos, instalación/compilación, pruebas, ejecución de la app de escritorio y de MySQL con Docker; enlazar el script SQL y los diagramas finales. |
-| Diagrama de arquitectura | No encontrado. | Mostrar MVC y los componentes/conexiones reales de la app JavaFX de escritorio y MySQL. |
-| Diagrama de clases | No encontrado. | Representar clases, responsabilidades y relaciones implementadas, no solo entidades del boceto. |
-| Diagrama de secuencia | No encontrado. | Mostrar al menos el flujo principal elegido, participantes y llamadas en orden; elegir el caso luego de definir la interfaz y los flujos. |
-| Diagrama de estados académicos | No encontrado. | Mostrar estados, transiciones y condiciones de cambio del alumno/cursada según las reglas académicas acordadas. |
-| Diagrama del modelo de datos | No encontrado. | Mostrar entidades/tablas, identificadores, relaciones y cardinalidades coherentes con la persistencia final. |
+| `README.md` | Existe, pero solo tiene el título del repositorio. | Describir objetivo y alcance, integrantes, Java/MySQL y la tecnología de cada variante (JavaFX o Spring Boot), requisitos previos, configuración sin secretos, instalación/compilación, pruebas, ejecución de la app de escritorio y de MySQL con Docker; enlazar el script SQL y los diagramas finales. |
+| Diagrama de arquitectura | Borrador en `diagramas/05-arquitectura.puml`. | Mostrar MVC y los componentes y conexiones con MySQL, válidos para la variante de escritorio y la web. |
+| Diagrama de clases | Borrador de análisis y diseño en `diagramas/02`, `07` y `08`. | Representar clases, responsabilidades y relaciones implementadas, no solo entidades del boceto. |
+| Diagrama de secuencia | DSS y DS de 6 operaciones en `diagramas/10` a `21`. | Mostrar al menos el flujo principal elegido, participantes y llamadas en orden; elegir el caso luego de definir la interfaz y los flujos. |
+| Diagrama de estados académicos | Borrador en `diagramas/03-estados-academicos.puml`. | Mostrar estados, transiciones y condiciones de cambio del alumno/cursada según las reglas académicas acordadas. |
+| Diagrama del modelo de datos | Borrador en `diagramas/04-modelo-de-datos.puml`. | Mostrar entidades/tablas, identificadores, relaciones y cardinalidades coherentes con la persistencia final. |
 | Script SQL | No encontrado. | Crear el esquema reproducible de MySQL que exige el enunciado y verificarlo desde una base vacía. |
-| Ejecución con Docker | No se encontraron `Dockerfile` ni archivo Compose. | Documentar y verificar MySQL en Docker y cómo se conecta la app JavaFX. Acordar si el requisito de Docker exige contenerizar también la interfaz gráfica o si alcanza con la base en contenedor y la app ejecutada en el escritorio anfitrión. |
+| Ejecución con Docker | No se encontraron `Dockerfile` ni archivo Compose. | Documentar y verificar MySQL en Docker y cómo se conecta cada variante. Acordar si el requisito de Docker exige contenerizar también la interfaz gráfica o si alcanza con la base en contenedor y la app ejecutada en el escritorio anfitrión. |
 | Boceto `backoffice-itec.jpeg` | Existe; es conceptual e incompleto. | Conservarlo como fuente y actualizarlo o reemplazarlo por diagramas finales coherentes. No usarlo como modelo de datos definitivo. |
+| Documento de análisis y diseño | `Documentacion_Backoffice_Academico_ITEC.docx`, generado con `generador/generar_documento.py` según la plantilla del TP integrador. | Mantenerlo sincronizado con el código: regenerar al cambiar reglas o diagramas. |
 | DOCX de enunciado, backlog y anexo | Existen en `document/`; son fuentes del proyecto. | Mantenerlos como referencias originales; no hace falta duplicar su contenido en nuevos documentos. |
 
-Los diagramas deben quedar en `document/`, como pide el enunciado. El formato y el nombre de los archivos quedan abiertos hasta elegir una herramienta; deben poder revisarse desde el repositorio y coincidir entre sí y con el sistema. La distinción entre roles, las reglas de negocio y el alcance de Docker siguen pendientes y afectan el README y los diagramas. La documentación de API no está en el alcance confirmado; las rutas del backlog son ejemplos opcionales.
+Los diagramas deben quedar en `document/`, como pide el enunciado. Los diagramas se escriben en PlantUML (`diagramas/*.puml`) con su imagen PNG; deben poder revisarse desde el repositorio y coincidir entre sí y con el sistema. La distinción entre roles, las reglas de negocio y el alcance de Docker ya están acordados (ver «Definiciones acordadas»). La documentación de API no está en el alcance confirmado; las rutas del backlog son ejemplos opcionales.
 
-## Definiciones pendientes antes de implementar
+## Definiciones acordadas
 
-- [ ] Aclarar si «Administrador» y «Administrativo» son roles diferentes o el mismo; el enunciado enumera ambos, mientras el backlog usa `ADM`. Definir quién crea cuentas y cómo se asignan roles.
-- [ ] Definir identidad y reglas de cada cursada: carrera, plan de estudios, materia, cuatrimestre/semestre, comisión y período. Precisar qué significa «no duplicar inscripción» y si un alumno puede recursar una materia en otra comisión o período.
-- [ ] Fijar escala, redondeo y cálculo de calificaciones: el backlog propone `0..10` y aprobación con nota **mayor o igual a 6**; el anexo permite elegir si el recuperatorio reemplaza o promedia, y llama «configurable» al promedio. Definir promoción, parciales requeridos, cantidad de recuperatorios y relación entre regularidad y aprobación.
-- [ ] Definir el denominador del 70 % de asistencia (clases registradas, justificadas y ausencia de clases), el efecto exacto de justificar una falta, y cuándo se recalcula o congela la regularidad.
-- [ ] Definir el procedimiento de reapertura/corrección extraordinaria de actas y asistencia cerradas, con permisos y auditoría; el anexo prohíbe editar actas cerradas y reserva el desbloqueo a `ADM`.
-- [ ] Definir si Docker ejecutará solo MySQL o también la aplicación JavaFX; acordar cómo se mostrará la interfaz si debe ejecutarse dentro de un contenedor.
-- [ ] Definir integrantes, entorno de ejecución y datos de ejemplo para la entrega.
+Decisiones tomadas el 22/11/2026. Se detallan como reglas `RN-XX` en [`Documentacion_Backoffice_Academico_ITEC.docx`](Documentacion_Backoffice_Academico_ITEC.docx).
+
+- [x] Roles: «Administrador» y «Administrativo» son el mismo rol `ADM`. Solo `ADM` crea usuarios y asigna roles. Roles del sistema: `ADM`, `DOC`, `ALU`.
+- [x] Cursada: alumno + materia + comisión + ciclo lectivo. No se permite una inscripción vigente duplicada en la misma materia; se puede recursar en otro ciclo.
+- [x] Calificaciones: escala 0 a 10 con un decimal; 2 parciales y 1 recuperatorio por parcial, que **reemplaza** la nota. Regular y promedio >= 8: `PROMOCIONADO`; regular y promedio >= 6: `REGULAR` (habilita final); si no, `DESAPROBADO`. Final >= 6: `APROBADO`.
+- [x] Asistencia: el 70 % se calcula sobre las clases dictadas; una falta `JUSTIFICADA` cuenta como presente.
+- [x] Cierres: actas y asistencias cerradas solo las reabre `ADM`, con motivo obligatorio y auditoría.
+- [x] Ejecución: MySQL en Docker para ambas variantes. La variante JavaFX se compila como `.jar` ejecutable listo para usar y se conecta a MySQL en Docker. La variante Spring Boot se ejecuta completa con Docker (aplicación + MySQL con docker compose).
+- [x] Integrantes: Ismael Althenofer. El alumno (`ALU`) solo consulta su asistencia, notas y condición.
 
 ## Plan de trabajo, en orden de dependencias
 
 ### 1. Base técnica y modelo académico
 
-- [ ] Sustituir el ejemplo `Hello World!` por una aplicación de escritorio JavaFX, con capas claras MVC de presentación, aplicación/negocio y persistencia; mantener Java y Maven y no atar reglas de negocio a la interfaz.
+- [ ] Sustituir el ejemplo `Hello World!` por la variante de escritorio JavaFX (y luego la variante Spring Boot), con capas claras MVC de presentación, aplicación/negocio y persistencia; mantener Java y Maven y no atar reglas de negocio a la interfaz.
 - [ ] Diseñar y crear el esquema MySQL persistente, relaciones, claves, restricciones y creación reproducible; entregar el **script SQL obligatorio** y proteger historial en bajas lógicas.
 - [ ] Modelar alumnos, docentes, materias, correlativas, carreras, planes, semestres, comisiones, horarios, clases, inscripciones, asistencias, evaluaciones, calificaciones, actas y auditoría según las funciones acordadas. Validar cardinalidades y nombres antes de copiar la imagen al código.
-- [ ] Habilitar configuración externa del entorno (conexión de JavaFX a MySQL y secretos), manejo de errores y ejecución local reproducible. No guardar contraseñas ni credenciales en el repositorio.
+- [ ] Habilitar configuración externa del entorno (conexión a MySQL y secretos), manejo de errores y ejecución local reproducible. No guardar contraseñas ni credenciales en el repositorio.
 
 ### 2. Acceso y catálogos académicos
 

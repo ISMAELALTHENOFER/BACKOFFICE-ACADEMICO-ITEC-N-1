@@ -1,0 +1,45 @@
+@startuml estados-academicos
+!pragma layout smetana
+skinparam shadowing false
+title Estado académico del alumno en una cursada (Inscripcion)
+
+state EN_CURSO {
+  state "Condición provisoria\nREGULAR (>= 70 %)" as PROV_REG
+  state "Condición provisoria\nNO_REGULAR (< 70 %)" as PROV_NOREG
+  [*] --> PROV_REG
+  PROV_REG --> PROV_NOREG : registrar asistencia\n[asistencia < 70 %]
+  PROV_NOREG --> PROV_REG : registrar / justificar\n[asistencia >= 70 %]
+}
+
+state "Cursada cerrada" as CERRADA {
+  state NO_REGULAR
+  state DESAPROBADO
+  state REGULAR
+  state PROMOCIONADO
+}
+
+[*] --> EN_CURSO : inscribirAlumno()\n[alumno ACTIVO, materia ACTIVA,\ncorrelativas aprobadas, sin duplicado]
+EN_CURSO --> BAJA : darDeBaja()
+EN_CURSO --> CERRADA : cerrarAsistencia()
+EN_CURSO -down-> NO_REGULAR : [asistencia < 70 %]
+EN_CURSO -down-> DESAPROBADO : [>= 70 % y promedio < 6]
+EN_CURSO -down-> REGULAR : [>= 70 % y 6 <= promedio < 8]
+EN_CURSO -down-> PROMOCIONADO : [>= 70 % y promedio >= 8]
+CERRADA --> EN_CURSO : reabrirAsistencia()\n[solo ADM, motivo obligatorio, auditado]
+
+REGULAR --> APROBADO : cerrarActa()\n[nota final >= 6]
+REGULAR --> DESAPROBADO : cerrarActa()\n[nota final < 6]
+
+APROBADO --> [*]
+PROMOCIONADO --> [*]
+DESAPROBADO --> [*]
+NO_REGULAR --> [*]
+BAJA --> [*]
+
+note right of APROBADO
+  APROBADO y PROMOCIONADO cuentan como
+  materia aprobada para validar correlativas.
+  NO_REGULAR, DESAPROBADO y BAJA permiten
+  recursar en otro ciclo lectivo.
+end note
+@enduml
