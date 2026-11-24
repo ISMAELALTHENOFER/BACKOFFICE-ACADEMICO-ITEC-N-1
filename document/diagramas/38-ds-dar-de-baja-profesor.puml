@@ -1,0 +1,25 @@
+@startuml ds-dar-de-baja-profesor
+skinparam shadowing false
+title DS - darDeBajaProfesor(profesorId)
+actor Administrativo
+participant ":ProfesorController" as C
+participant ":ProfesorServiceImpl" as S
+participant ":Autorizador" as AU
+participant ":ProfesorRepository" as R
+participant "p:Profesor" as P
+
+Administrativo -> C : darDeBaja()
+C -> S : darDeBaja(profesorId)
+S -> AU : exigirRol(ADMINISTRATIVO, ADMIN)
+S -> R : findById(profesorId)
+R --> S : p
+alt profesor encontrado
+  S -> P : setEstado(INACTIVO)
+  S -> R : save(p)
+  S --> C : ok
+  C --> Administrativo : profesor dado de baja
+else profesor inexistente
+  S --> C : NotFoundException
+  C --> Administrativo : "Profesor no encontrado"
+end
+@enduml

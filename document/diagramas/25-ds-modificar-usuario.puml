@@ -1,0 +1,38 @@
+@startuml ds-modificar-usuario
+skinparam shadowing false
+title DS - modificarUsuario(usuarioId, datos, roles)
+actor "Administrativo / Admin" as Act
+participant ":UsuarioController" as C
+participant ":UsuarioServiceImpl" as S
+participant ":Autorizador" as AU
+participant ":UserRepository" as UR
+participant "u:User" as U
+
+Act -> C : modificar()
+C -> S : modificar(id, request)
+S -> AU : exigirRol(ADMINISTRATIVO, ADMIN)
+S -> UR : findById(id)
+UR --> S : Optional<User>
+alt usuario existe
+  opt u.roles o roles nuevos incluyen ADMIN o ADMINISTRATIVO (RN-02)
+    S -> AU : exigirRol(ADMIN)
+  end
+  S -> S : validar campos (RN-04)
+  S -> UR : existsByDniOrEmailOrUsernameAndIdNot(dni, email, username, id)
+  UR --> S : boolean
+  alt datos disponibles
+    S -> U : actualizar(datos, roles)
+    S -> U : setFechaModificacion(ahora)
+    S -> S : crearAsociadoSiFalta(u) (RN-05)
+    S -> UR : save(u)
+    S --> C : UsuarioResponse
+    C --> Act : usuario actualizado
+  else dato duplicado
+    S --> C : DataExistException
+    C --> Act : mensaje de error
+  end
+else no existe
+  S --> C : NotFoundException
+  C --> Act : "Usuario no encontrado"
+end
+@enduml

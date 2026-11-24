@@ -6,7 +6,11 @@ participant ":Sistema" as S
 U -> S : iniciarSesion(username, contraseña)
 alt credenciales válidas y usuario activo
   S --> U : menú habilitado según sus roles\n(ADMIN / ADMINISTRATIVO / PROFESOR / ALUMNO)
-else credenciales inválidas o usuario inactivo
+else usuario o contraseña incorrectos
   S --> U : "Usuario o contraseña incorrectos"
+else usuario inactivo (credenciales correctas)
+  S --> U : "Usuario inactivo o sin permisos"
 end
+U -> S : cerrarSesion()
+S --> U : sesión finalizada; pantalla de inicio de sesión
 @enduml

@@ -1,0 +1,31 @@
+@startuml ds-inscribir-en-carrera
+skinparam shadowing false
+title DS - inscribirEnCarrera(alumnoId, planEstudioId, anioIngreso)
+actor Administrativo
+participant ":AlumnoController" as C
+participant ":AlumnoServiceImpl" as S
+participant ":Autorizador" as AU
+participant ":AlumnoRepository" as R
+participant ":PlanEstudioRepository" as PR
+participant ":AlumnoCarreraRepository" as ACR
+
+Administrativo -> C : inscribirEnCarrera()
+C -> S : inscribirEnCarrera(alumnoId, planId, anioIngreso)
+S -> AU : exigirRol(ADMINISTRATIVO, ADMIN)
+S -> R : findById(alumnoId)
+R --> S : alumno
+S -> PR : findById(planId)
+PR --> S : plan (con su carrera)
+S -> ACR : existsByAlumnoAndCarrera(alumnoId, plan.carrera.id)
+ACR --> S : boolean
+alt no inscripto en la carrera (RN-12)
+  create participant "ac:AlumnoCarrera" as AC
+  S -> AC : new AlumnoCarrera(alumno, plan.carrera, plan, anioIngreso)
+  S -> ACR : save(ac)
+  S --> C : ok
+  C --> Administrativo : inscripción registrada
+else ya inscripto
+  S --> C : DataExistException
+  C --> Administrativo : "El alumno ya está inscripto en esa carrera"
+end
+@enduml

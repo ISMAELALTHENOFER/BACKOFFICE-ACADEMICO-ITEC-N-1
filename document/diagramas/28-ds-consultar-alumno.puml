@@ -1,0 +1,25 @@
+@startuml ds-consultar-alumno
+skinparam shadowing false
+title DS - consultarAlumno(dni)
+actor Administrativo
+participant ":AlumnoController" as C
+participant ":AlumnoServiceImpl" as S
+participant ":Autorizador" as AU
+participant ":AlumnoRepository" as R
+participant ":AlumnoCarreraRepository" as ACR
+
+Administrativo -> C : buscar()
+C -> S : buscarPorDni(dni)
+S -> AU : exigirRol(ADMINISTRATIVO, ADMIN)
+S -> R : findByDni(dni)
+R --> S : Optional<Alumno>
+alt alumno existe
+  S -> ACR : findByAlumno(alumnoId)
+  ACR --> S : List<AlumnoCarrera>
+  S --> C : AlumnoResponse
+  C --> Administrativo : datos y carreras del alumno
+else no existe
+  S --> C : NotFoundException
+  C --> Administrativo : "Alumno no encontrado"
+end
+@enduml

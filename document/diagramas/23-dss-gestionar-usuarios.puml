@@ -1,0 +1,32 @@
+@startuml dss-gestionar-usuarios
+skinparam shadowing false
+title DSS - UC-02 Gestionar usuarios
+actor "Administrativo / Admin" as U
+participant ":Sistema" as S
+U -> S : crearUsuario(username, contraseña, nombre, apellido, dni, email, teléfono, roles)
+alt datos válidos, únicos y roles asignables por quien opera
+  S --> U : usuario activo creado (y alumno o profesor asociado)
+else un ADMINISTRATIVO asigna ADMIN o ADMINISTRATIVO
+  S --> U : "Operación no permitida"
+else username, DNI o email duplicado
+  S --> U : "Ya existe un usuario con ese dato"
+end
+U -> S : modificarUsuario(usuarioId, nombre, apellido, dni, email, teléfono, roles)
+alt datos válidos y operación permitida
+  S --> U : usuario actualizado
+else operación no permitida o dato duplicado
+  S --> U : mensaje de error
+end
+U -> S : cambiarEstadoUsuario(usuarioId, activo)
+alt operación permitida
+  S --> U : cuenta activada o desactivada
+else cuenta ADMIN o ADMINISTRATIVO y quien opera no es ADMIN
+  S --> U : "Operación no permitida"
+end
+U -> S : restablecerContraseña(usuarioId, nuevaContraseña)
+alt operación permitida
+  S --> U : contraseña restablecida
+else cuenta ADMIN o ADMINISTRATIVO y quien opera no es ADMIN
+  S --> U : "Operación no permitida"
+end
+@enduml

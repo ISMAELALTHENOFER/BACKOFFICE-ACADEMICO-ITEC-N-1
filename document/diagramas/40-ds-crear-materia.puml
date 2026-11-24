@@ -1,0 +1,32 @@
+@startuml ds-crear-materia
+skinparam shadowing false
+title DS - crearMateria(codigo, nombre, planEstudioId, anio, cuatrimestre)
+actor Administrativo
+participant ":MateriaController" as C
+participant ":MateriaServiceImpl" as S
+participant ":Autorizador" as AU
+participant ":MateriaRepository" as MR
+participant ":PlanEstudioRepository" as PR
+
+Administrativo -> C : guardar()
+C -> S : crear(request)
+S -> AU : exigirRol(ADMINISTRATIVO, ADMIN)
+S -> S : validar campos obligatorios\n(código, nombre, año, cuatrimestre)
+S -> MR : existsByCodigo(codigo)
+MR --> S : boolean
+S -> PR : findById(planEstudioId)
+PR --> S : plan
+alt código disponible y plan encontrado
+  create participant "m:Materia" as M
+  S -> M : new Materia(codigo, nombre, anio, cuatrimestre, plan, ACTIVA)
+  S -> MR : save(m)
+  S --> C : MateriaResponse
+  C --> Administrativo : confirmación
+else código duplicado
+  S --> C : DataExistException
+  C --> Administrativo : mensaje de error
+else plan inexistente
+  S --> C : NotFoundException
+  C --> Administrativo : "Plan de estudios no encontrado"
+end
+@enduml

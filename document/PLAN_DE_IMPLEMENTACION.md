@@ -59,7 +59,7 @@ Decisiones tomadas el 22/11/2026. Se detallan como reglas `RN-XX` en [`Documenta
 - [x] Modelo de dominio alineado con el modelo de referencia de la cátedra (`User` con datos personales y roles, `Alumno`/`Profesor` 1:1, `Carrera`, `PlanEstudio`, `AlumnoCarrera`, `Materia`, `Cuatrimestre`, `ComisionMateria`, `HorarioClase`, `ModuloHorario`, `Examen`, `Nota`, `AlumnoInscripto`, `Asistencia`), extendido con código y estado de materia, baja lógica, asistencia `JUSTIFICADA`, `ActaFinal` y auditoría.
 - [x] Roles: `ADMIN`, `ADMINISTRATIVO`, `PROFESOR` y `ALUMNO`; un usuario puede tener varios. Solo `ADMIN` crea usuarios `ADMIN`/`ADMINISTRATIVO`; `ADMIN` o `ADMINISTRATIVO` crean `PROFESOR`/`ALUMNO`.
 - [x] Cursada: alumno + materia + comisión + ciclo lectivo. No se permite una inscripción vigente duplicada en la misma materia; se puede recursar en otro ciclo.
-- [x] Calificaciones: escala 0 a 10 con un decimal; 2 parciales y 1 recuperatorio por parcial, que **reemplaza** la nota. Regular y promedio >= 8: `PROMOCIONADO`; regular y promedio >= 6: `REGULAR` (habilita final); si no, `DESAPROBADO`. Final >= 6: `APROBADO`.
+- [x] Calificaciones: escala 0 a 10 con un decimal; 2 parciales y 1 recuperatorio por parcial, que **reemplaza** la nota. Regular y promedio >= 8: `PROMOCIONADO`; regular y promedio >= 6: `REGULAR` (habilita final); asistencia < 70 % o promedio < 6: `RECURSA`. Final >= 6: `APROBADO`; final < 6: `DESAPROBADO`.
 - [x] Asistencia: el 70 % se calcula sobre las clases dictadas; una falta `JUSTIFICADA` cuenta como presente.
 - [x] Cierres: actas y asistencias cerradas solo las reabre `ADMINISTRATIVO` o `ADMIN`, con motivo obligatorio y auditoría.
 - [x] Ejecución: MySQL en Docker para ambas variantes. La variante JavaFX se compila como `.jar` ejecutable listo para usar y se conecta a MySQL en Docker. La variante Spring Boot se ejecuta completa con Docker (aplicación + MySQL con docker compose).
@@ -98,8 +98,8 @@ Decisiones tomadas el 22/11/2026. Se detallan como reglas `RN-XX` en [`Documenta
 - [ ] `US-CAL-01`: el profesor de la comisión carga parciales de alumnos inscriptos; validar escala acordada y rechazar fuera de rango. Probar `TC-CAL-01..02`.
 - [ ] `US-CAL-02`: cargar final solo para alumno regular y con correlativas aprobadas; con nota **>= 6** marcar `APROBADO`, con nota **< 6**, `DESAPROBADO`; impedir final de `NO_REGULAR`. Probar `TC-CAL-03..05`.
 - [ ] `US-CAL-03`: permitir corrección de nota al profesor de la comisión con auditoría de valor anterior/nuevo, usuario y fecha; rechazar cambios no autorizados o en acta cerrada.
-- [ ] `US-CAL-04`: permitir recuperatorio solo de parcial desaprobado; aplicar reemplazo o promedio según decisión previa y comprobar ambos resultados de recuperación.
-- [ ] `US-CAL-05`: calcular automáticamente promedio y condición; acordar antes el efecto de recuperatorios y los estados `PROMOCIONADO`, `REGULAR`, `DESAPROBADO`.
+- [ ] `US-CAL-04`: permitir recuperatorio solo de parcial desaprobado; la nota del recuperatorio reemplaza a la del parcial (RN-20); comprobar recuperatorio aprobado y desaprobado.
+- [ ] `US-CAL-05`: calcular automáticamente promedio y condición: `PROMOCIONADO`, `REGULAR` o `RECURSA` (RN-21).
 - [ ] `US-CAL-06`: cerrar acta final solo si están todas las notas finales exigibles; bloquear edición posterior y permitir excepciones administrativas auditadas. Firma digital: **opcional**.
 
 ### 5. Consultas, reportes y entrega

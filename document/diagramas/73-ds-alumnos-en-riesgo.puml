@@ -1,0 +1,37 @@
+@startuml ds-alumnos-en-riesgo
+skinparam shadowing false
+title DS - generarReporteAlumnosEnRiesgo(comisionId)
+actor Usuario
+participant ":ReporteController" as C
+participant ":ReporteServiceImpl" as S
+participant ":Autorizador" as AU
+participant ":Sesion" as SES
+participant ":AlumnoInscriptoRepository" as IR
+participant ":NotaRepository" as NR
+participant ":CalculadoraCondicion" as CC
+
+Usuario -> C : generar()
+C -> S : alumnosEnRiesgo(comisionId)
+S -> AU : exigirRol(PROFESOR, ADMINISTRATIVO, ADMIN)
+S -> SES : usuarioActual()
+SES --> S : usuario
+opt usuario con rol PROFESOR
+  S -> AU : exigirProfesorDeComision(comisionId)
+end
+S -> IR : findByComision(comisionId)
+IR --> S : inscriptos (con porcentajeAsistencia)
+loop por cada inscripto
+  S -> NR : findByInscripto(inscriptoId)
+  NR --> S : notas
+  S -> CC : promedio(notas)
+  CC --> S : promedio
+  opt porcentajeAsistencia < 70
+    S -> S : agregar AlumnoEnRiesgo("Riesgo de pérdida de regularidad")
+  end
+  opt promedio < 6
+    S -> S : agregar AlumnoEnRiesgo("Riesgo académico")
+  end
+end
+S --> C : List<AlumnoEnRiesgo>
+C --> Usuario : alumnos en riesgo con su motivo
+@enduml

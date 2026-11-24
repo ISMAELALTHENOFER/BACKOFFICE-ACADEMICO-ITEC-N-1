@@ -1,0 +1,24 @@
+@startuml ds-registrar-carrera
+skinparam shadowing false
+title DS - registrarCarrera(nombre)
+actor Administrativo
+participant ":OfertaAcademicaController" as C
+participant ":OfertaAcademicaServiceImpl" as S
+participant ":Autorizador" as AU
+participant ":CarreraRepository" as CR
+
+Administrativo -> C : guardarCarrera()
+C -> S : crearCarrera(request)
+S -> AU : exigirRol(ADMINISTRATIVO, ADMIN)
+S -> S : validar nombre obligatorio
+alt datos válidos
+  create participant "c:Carrera" as CA
+  S -> CA : new Carrera(nombre)
+  S -> CR : save(c)
+  S --> C : CarreraResponse
+  C --> Administrativo : confirmación
+else nombre vacío
+  S --> C : ValidacionException
+  C --> Administrativo : campo con error
+end
+@enduml

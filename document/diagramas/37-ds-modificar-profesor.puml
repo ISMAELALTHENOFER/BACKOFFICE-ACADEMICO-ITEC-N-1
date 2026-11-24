@@ -1,0 +1,34 @@
+@startuml ds-modificar-profesor
+skinparam shadowing false
+title DS - modificarProfesor(profesorId, datos)
+actor Administrativo
+participant ":ProfesorController" as C
+participant ":ProfesorServiceImpl" as S
+participant ":Autorizador" as AU
+participant ":ProfesorRepository" as R
+participant ":UserRepository" as UR
+participant "u:User" as U
+
+Administrativo -> C : modificar()
+C -> S : modificar(profesorId, request)
+S -> AU : exigirRol(ADMINISTRATIVO, ADMIN)
+S -> S : validar campos (DNI 7-8 dígitos, email, teléfono)
+S -> R : findById(profesorId)
+R --> S : p (con su usuario u)
+alt profesor encontrado
+  S -> UR : existsByDniOrEmailAndIdNot(dni, email, u.id)
+  UR --> S : boolean
+  alt datos disponibles
+    S -> U : actualizar datos personales\ny fecha de última modificación
+    S -> UR : save(u)
+    S --> C : ProfesorResponse
+    C --> Administrativo : confirmación
+  else DNI o email de otro usuario
+    S --> C : DataExistException
+    C --> Administrativo : mensaje de error
+  end
+else profesor inexistente
+  S --> C : NotFoundException
+  C --> Administrativo : "Profesor no encontrado"
+end
+@enduml

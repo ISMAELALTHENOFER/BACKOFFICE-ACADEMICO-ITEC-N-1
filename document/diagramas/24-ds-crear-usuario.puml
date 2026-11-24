@@ -1,0 +1,45 @@
+@startuml ds-crear-usuario
+skinparam shadowing false
+title DS - crearUsuario(datos, roles)
+actor "Administrativo / Admin" as Act
+participant ":UsuarioController" as C
+participant ":UsuarioServiceImpl" as S
+participant ":Autorizador" as AU
+participant ":UserRepository" as UR
+participant ":PasswordEncoder" as PE
+participant ":AlumnoRepository" as AR
+participant ":ProfesorRepository" as PR
+
+Act -> C : guardar()
+C -> S : crear(request)
+S -> AU : exigirRol(ADMINISTRATIVO, ADMIN)
+opt roles incluye ADMIN o ADMINISTRATIVO (RN-02)
+  S -> AU : exigirRol(ADMIN)
+  note right of AU : si no corresponde lanza\nAccesoDenegadoException
+end
+S -> S : validar campos (RN-04)
+S -> UR : existsByDniOrEmailOrUsername(dni, email, username)
+UR --> S : boolean
+alt datos disponibles
+  S -> PE : encode(contraseña)
+  PE --> S : hash
+  create participant "u:User" as U
+  S -> U : new User(datos, hash, roles, activo)
+  S -> UR : save(u)
+  opt roles incluye ALUMNO (RN-05)
+    create participant "a:Alumno" as A
+    S -> A : new Alumno(u, ACTIVO)
+    S -> AR : save(a)
+  end
+  opt roles incluye PROFESOR (RN-05)
+    create participant "p:Profesor" as P
+    S -> P : new Profesor(u, ACTIVO)
+    S -> PR : save(p)
+  end
+  S --> C : UsuarioResponse
+  C --> Act : confirmación
+else dato duplicado
+  S --> C : DataExistException
+  C --> Act : mensaje de error
+end
+@enduml

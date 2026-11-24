@@ -20,6 +20,7 @@ from contenido import (
     AUTOR, CASOS_DE_USO, CONTRATOS, ESCENARIO, INTRODUCCION, PAQUETES,
     PERSONAL, REGLAS, REQUISITOS, REQUISITOS_NO_FUNCIONALES, TITULO,
     TRAZABILIDAD, USUARIOS, FECHA, CAPAS, ENTORNO, NOTAS_MODELO_DATOS, EXTENSIONES_MODELO,
+    DSS, OBJETIVOS, FRACASOS, HISTORIAS,
 )
 
 RAIZ = Path(__file__).resolve().parents[1]
@@ -183,24 +184,47 @@ def caso_de_uso(doc, uc):
         unida = celdas[1].merge(celdas[2]).merge(celdas[3])
         texto_celda(unida, contenido)
 
+    def fila_actor_sistema(actor, sistema, negrita=False):
+        celdas = t.add_row().cells
+        izquierda = celdas[0].merge(celdas[1])
+        derecha = celdas[2].merge(celdas[3])
+        texto_celda(izquierda, actor, negrita=negrita)
+        texto_celda(derecha, sistema, negrita=negrita)
+        if negrita:
+            sombrear(izquierda)
+            sombrear(derecha)
+
     fila4("Nivel de caso de uso:", uc["nivel"], "Paquete:", uc["paquete"])
     fila_unida("Nombre del caso de uso:", f"{uc['nombre']} ({uc['id']})")
     fila4("Prioridad:", uc["prioridad"], "Categoría:", uc["categoria"])
     fila4("Complejidad:", uc["complejidad"], "Significativo para la arquitectura:", uc["arquitectura"])
     fila4("Actor principal:", uc["actor"], "Actor secundario:", uc.get("secundario", "—"))
     fila4("Tipo de caso de uso:", uc["tipo"], "Trazabilidad:", uc["traza"])
+    fila_unida("Objetivos:", OBJETIVOS[uc["id"]])
     fila_unida("Precondiciones:", uc["pre"])
-    fila_unida("Postcondiciones:", uc["post"])
-    fila_unida("Flujo normal:", [f"{i}. {paso}" for i, paso in enumerate(uc["flujo"], 1)])
+    fila_unida("Postcondiciones:", [f"Éxito (flujo normal): {uc['post']}"] + FRACASOS[uc["id"]])
+    fila_flujo = t.add_row()
+    encabezado = fila_flujo.cells[0].merge(fila_flujo.cells[3])
+    texto_celda(encabezado, "Flujo normal", negrita=True)
+    sombrear(encabezado)
+    fila_actor_sistema("Actor", "Sistema", negrita=True)
+    for i, paso in enumerate(uc["flujo"], 1):
+        # El paso pertenece al sistema cuando su sujeto es «El sistema».
+        if paso.startswith("El sistema") or paso.startswith("Si "):
+            fila_actor_sistema("", f"{i}. {paso}")
+        else:
+            fila_actor_sistema(f"{i}. {paso}", "")
     fila_unida("Cursos alternativos:", uc["alternativos"] or ["No aplica."])
     for fila in t.rows:
         for celda, ancho in zip(fila.cells, (3.5, 4.75, 3.5, 4.75)):
             celda.width = Cm(ancho)
     doc.add_paragraph()
 
-    for c in [c for c in CONTRATOS if c["uc"] == uc["id"]]:
+    if uc["id"] in DSS:
         doc.add_heading(f"DSS: {uc['nombre']} ({uc['id']})", level=3)
-        imagen(doc, c["dss"], f"Diagrama de secuencia del sistema - {uc['nombre']}", ancho_para(c["dss"]))
+        imagen(doc, DSS[uc["id"]], f"Diagrama de secuencia del sistema - {uc['nombre']}",
+               ancho_para(DSS[uc["id"]]))
+    for c in [c for c in CONTRATOS if c["uc"] == uc["id"]]:
         doc.add_heading(f"CCO: {c['titulo']}", level=3)
         tabla_clave_valor(doc, [
             ("Operación", c["operacion"]),
@@ -264,12 +288,28 @@ def generar():
     doc.add_heading("5.1 Requisitos no funcionales (RNF-XX)", level=2)
     tabla(doc, ["Número", "Requerimiento"], REQUISITOS_NO_FUNCIONALES, [2, 14.5])
 
-    doc.add_heading("6. Diagrama de casos de uso", level=1)
+    doc.add_heading("6. Historias de usuario", level=1)
+    parrafos(doc, ["Las historias de usuario provienen del backlog del proyecto (Requerimientos y su "
+                   "Anexo). Cada una indica el rol, la necesidad y el beneficio, sus criterios de "
+                   "aceptación y los casos de prueba que la verifican. Los casos de prueba marcados "
+                   "como «propuesto» completan las historias que en el backlog no tenían casos de "
+                   "prueba definidos."])
+    tabla(doc, ["ID", "Historia de usuario", "Caso de uso"],
+          [[h["id"], h["titulo"], h["uc"]] for h in HISTORIAS], [3, 9.5, 4])
+    for h in HISTORIAS:
+        doc.add_heading(f"{h['id']}: {h['titulo']}", level=3)
+        tabla_clave_valor(doc, [
+            ("Descripción", f"Como {h['como']}, quiero {h['quiero']}, para {h['para']}."),
+            ("Criterios de aceptación", h["criterios"]),
+            ("Casos de prueba", h["pruebas"]),
+        ])
+
+    doc.add_heading("7. Diagrama de casos de uso", level=1)
     imagen(doc, "casos-de-uso.png", "Diagrama de casos de uso del sistema", Cm(13))
     tabla(doc, ["ID", "Caso de uso", "Actor", "Requisitos"],
           [[u["id"], u["nombre"], u["actor"], u["rf"]] for u in CASOS_DE_USO], [1.8, 6.5, 4, 4.2])
 
-    doc.add_heading("7. Diagrama de clases de análisis", level=1)
+    doc.add_heading("8. Diagrama de clases de análisis", level=1)
     parrafos(doc, ["Representa los conceptos del dominio académico y sus asociaciones, "
                    "sin decisiones de implementación."])
     imagen(doc, "clases-analisis.png", "Diagrama de clases de análisis", ancho_para("clases-analisis.png"))
@@ -279,43 +319,46 @@ def generar():
                    "requerimientos funcionales:"])
     vinetas(doc, EXTENSIONES_MODELO)
 
-    doc.add_heading("8. Casos de uso", level=1)
+    doc.add_heading("9. Casos de uso", level=1)
     parrafos(doc, ["Se especifica cada caso de uso. Para las operaciones más significativas se "
                    "incluyen el diagrama de secuencia del sistema (DSS), el contrato de la operación "
                    "(CCO) y el diagrama de secuencia de diseño (DS)."])
     for uc in CASOS_DE_USO:
         caso_de_uso(doc, uc)
 
-    doc.add_heading("9. Diagrama de estados (estado académico del alumno)", level=1)
+    doc.add_heading("10. Diagrama de estados (estado académico del alumno)", level=1)
     parrafos(doc, ["El estado académico pertenece a cada cursada del alumno (AlumnoInscripto). "
                    "Mientras la cursada está EN_CURSO, la condición de asistencia (REGULAR o NO_REGULAR) "
                    "se recalcula automáticamente con cada registro de asistencia; al cerrar la asistencia "
                    "se congela y se fija el estado de la cursada."])
     imagen(doc, "estados-academicos.png", "Diagrama de estados del alumno en una cursada")
 
-    doc.add_heading("10. Diagrama de clases de diseño", level=1)
-    imagen(doc, "clases-diseno.png", "Clases de diseño: controladores, servicios, seguridad, reglas y persistencia",
+    doc.add_heading("11. Diagrama de clases de diseño", level=1)
+    imagen(doc, "clases-diseno.png", "Clases de diseño: controladores y servicios",
            ancho_para("clases-diseno.png", Cm(15)))
+    imagen(doc, "clases-diseno-servicios.png",
+           "Clases de diseño: implementación de servicios, seguridad, reglas, reportes y persistencia",
+           ancho_para("clases-diseno-servicios.png", Cm(13)))
     imagen(doc, "clases-diseno-dominio.png", "Clases de diseño: modelo de dominio",
            ancho_para("clases-diseno-dominio.png"))
 
-    doc.add_heading("11. Modelo de datos", level=1)
+    doc.add_heading("12. Modelo de datos", level=1)
     imagen(doc, "modelo-de-datos.png", "Modelo de datos relacional (MySQL)")
     vinetas(doc, NOTAS_MODELO_DATOS)
 
-    doc.add_heading("12. Paquetes del modelo del dominio", level=1)
+    doc.add_heading("13. Paquetes del modelo del dominio", level=1)
     imagen(doc, "paquetes.png", "Paquetes del sistema y sus dependencias", ancho_para("paquetes.png"))
     tabla(doc, ["Paquete", "Responsabilidad"], PAQUETES, [5, 11.5])
 
-    doc.add_heading("13. Patrón de arquitectura de capas (Layers)", level=1)
+    doc.add_heading("14. Patrón de arquitectura de capas (Layers)", level=1)
     parrafos(doc, CAPAS["parrafos"])
     tabla(doc, ["Capa", "Componente MVC", "Contenido"], CAPAS["tabla"], [4, 3.5, 9])
     imagen(doc, "arquitectura.png", "Diagrama de arquitectura", ancho_para("arquitectura.png"))
 
-    doc.add_heading("14. Trazabilidad de requisitos y casos de prueba", level=1)
+    doc.add_heading("15. Trazabilidad de requisitos y casos de prueba", level=1)
     tabla(doc, ["Historia", "Requisitos", "Caso de uso", "Casos de prueba"], TRAZABILIDAD, [3, 3.5, 3, 7])
 
-    doc.add_heading("15. Entorno de ejecución", level=1)
+    doc.add_heading("16. Entorno de ejecución", level=1)
     parrafos(doc, ENTORNO["parrafos"])
     tabla(doc, ["Componente", "Detalle"], ENTORNO["tabla"], [4.5, 12])
 

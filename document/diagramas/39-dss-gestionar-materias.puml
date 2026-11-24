@@ -1,0 +1,36 @@
+@startuml dss-gestionar-materias
+skinparam shadowing false
+title DSS - UC-05 Gestionar materias y correlativas
+actor "Administrativo" as U
+participant ":Sistema" as S
+U -> S : crearMateria(codigo, nombre, planEstudioId, anio, cuatrimestre)
+alt datos válidos y código no registrado
+  S --> U : materia creada en estado ACTIVA
+else código duplicado
+  S --> U : "Ya existe una materia con ese código"
+else plan inexistente o datos inválidos
+  S --> U : detalle del error
+end
+U -> S : modificarMateria(materiaId, codigo, nombre, planEstudioId, anio, cuatrimestre)
+alt materia existente y datos válidos
+  S --> U : datos de la materia actualizados
+else materia inexistente
+  S --> U : "Materia no encontrada"
+else código duplicado o datos inválidos
+  S --> U : detalle del error
+end
+U -> S : darDeBajaMateria(materiaId)
+alt materia existente
+  S --> U : materia en estado INACTIVA
+else materia inexistente
+  S --> U : "Materia no encontrada"
+end
+U -> S : agregarCorrelativa(materiaId, correlativaId)
+alt sin autorreferencia ni ciclo
+  S --> U : correlativa registrada
+else la materia es su propia correlativa
+  S --> U : "Una materia no puede ser correlativa de sí misma"
+else se forma un ciclo
+  S --> U : "La correlativa genera un ciclo" y detalle del ciclo
+end
+@enduml

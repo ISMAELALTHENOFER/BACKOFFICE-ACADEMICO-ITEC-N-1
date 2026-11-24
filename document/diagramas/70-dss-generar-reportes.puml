@@ -1,0 +1,38 @@
+@startuml dss-generar-reportes
+skinparam shadowing false
+title DSS - UC-17 Generar reportes académicos
+actor "Usuario\n(PROFESOR, ADMINISTRATIVO o ADMIN)" as U
+participant ":Sistema" as S
+alt reporte de asistencia
+  U -> S : generarReporteAsistencia(comisionId)
+  alt hay clases registradas
+    S --> U : porcentaje y condición REGULAR / NO_REGULAR por alumno
+  else sin clases registradas
+    S --> U : "Sin registros"
+  end
+else reporte de rendimiento
+  U -> S : generarReporteRendimiento(alumnoId)
+  alt el alumno tiene notas
+    S --> U : parciales, nota final, estado y promedio por cursada
+  else sin notas
+    S --> U : "Sin calificaciones registradas"
+  end
+else alumnos en riesgo
+  U -> S : generarReporteAlumnosEnRiesgo(comisionId)
+  S --> U : alumnos en riesgo con su motivo
+else libro de actas
+  U -> S : generarLibroDeActas(filtro)
+  S --> U : libro de actas
+  opt exportar
+    U -> S : exportarLibroDeActas(formato)
+    S --> U : archivo PDF | Excel | CSV
+  end
+else auditoría (ADMINISTRATIVO o ADMIN)
+  U -> S : consultarAuditoria(filtro)
+  S --> U : eventos filtrados por fecha, usuario o entidad
+end
+note over U, S
+  Un PROFESOR solo obtiene reportes de sus comisiones y no consulta la auditoría;
+  en otro caso el sistema informa "Operación no permitida".
+end note
+@enduml

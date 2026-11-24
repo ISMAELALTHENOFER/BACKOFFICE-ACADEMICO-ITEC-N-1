@@ -1,0 +1,47 @@
+@startuml ds-modificar-nota
+skinparam shadowing false
+title DS - modificarNota(notaId, valor)
+actor Profesor
+participant ":NotaController" as C
+participant ":NotaServiceImpl" as S
+participant ":NotaRepository" as NR
+participant ":Autorizador" as AU
+participant ":ActaFinalRepository" as AC
+participant ":ComisionMateriaRepository" as CR
+participant ":CalculadoraCondicion" as CC
+participant ":AlumnoInscriptoRepository" as IR
+participant ":AuditoriaService" as AUD
+
+Profesor -> C : modificar()
+C -> S : modificar(notaId, valor)
+S -> S : validar valor 0..10 con un decimal
+S -> NR : findById(notaId)
+NR --> S : nota n (inscripto, examen y comisión)
+S -> AU : exigirProfesorDeComision(comisionId)
+alt examen de tipo FINAL
+  S -> AC : findByExamen(examenId)
+  AC --> S : acta
+  S -> S : validar acta ABIERTA
+else examen de cursada
+  S -> CR : findById(comisionId)
+  CR --> S : comisión
+  S -> S : validar asistenciaCerrada = falso
+end
+alt registro abierto
+  S -> S : anterior = n.valor
+  S -> NR : actualizarValor(notaId, valor)
+  S -> AUD : registrar("MODIFICACION_NOTA", "nota", notaId, anterior, valor, null)
+  opt examen de cursada
+    S -> NR : findByInscripto(inscriptoId)
+    NR --> S : notas
+    S -> CC : promedio(notas)
+    CC --> S : promedio
+    S -> IR : actualizarPromedio(inscriptoId, promedio)
+  end
+  S --> C : n
+  C --> Profesor : nota modificada
+else acta o asistencia cerrada
+  S --> C : OperacionNoPermitidaException
+  C --> Profesor : "Operación no permitida"
+end
+@enduml

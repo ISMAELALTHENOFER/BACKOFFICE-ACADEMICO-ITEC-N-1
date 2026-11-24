@@ -29,7 +29,7 @@ alt sin faltantes ni duplicado
   S --> C : i
   C --> Administrativo : confirmación
 else regla incumplida
-  S --> C : ReglaNegocioException(detalle)
+  S --> C : ValidacionException(detalle)
   C --> Administrativo : motivo del rechazo
 end
 @enduml

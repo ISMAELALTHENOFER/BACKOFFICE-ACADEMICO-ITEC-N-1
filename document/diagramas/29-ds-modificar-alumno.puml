@@ -1,0 +1,35 @@
+@startuml ds-modificar-alumno
+skinparam shadowing false
+title DS - modificarAlumno(alumnoId, datos)
+actor Administrativo
+participant ":AlumnoController" as C
+participant ":AlumnoServiceImpl" as S
+participant ":Autorizador" as AU
+participant ":AlumnoRepository" as R
+participant ":UserRepository" as UR
+participant "u:User" as U
+
+Administrativo -> C : modificar()
+C -> S : modificar(id, request)
+S -> AU : exigirRol(ADMINISTRATIVO, ADMIN)
+S -> R : findById(id)
+R --> S : Optional<Alumno>
+alt alumno existe
+  S -> S : validar campos (RN-04)
+  S -> UR : existsByDniOrEmailAndIdNot(dni, email, u.id)
+  UR --> S : boolean
+  alt datos disponibles
+    S -> U : actualizarDatos(nombre, apellido, dni, email, teléfono)
+    S -> U : setFechaModificacion(ahora)
+    S -> UR : save(u)
+    S --> C : AlumnoResponse
+    C --> Administrativo : alumno actualizado
+  else dato duplicado
+    S --> C : DataExistException
+    C --> Administrativo : mensaje de error
+  end
+else no existe
+  S --> C : NotFoundException
+  C --> Administrativo : "Alumno no encontrado"
+end
+@enduml

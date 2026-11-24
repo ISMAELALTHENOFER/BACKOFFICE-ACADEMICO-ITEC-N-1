@@ -1,0 +1,136 @@
+@startuml clases-diseno-servicios
+!pragma layout smetana
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+title Diagrama de clases de diseño - implementación de servicios, seguridad, reglas y persistencia
+left to right direction
+
+package "service.impl" {
+  class AuthServiceImpl
+  class UsuarioServiceImpl
+  class AlumnoServiceImpl
+  class ProfesorServiceImpl
+  class MateriaServiceImpl
+  class OfertaAcademicaServiceImpl
+  class ComisionServiceImpl
+  class InscripcionServiceImpl
+  class AsistenciaServiceImpl
+  class NotaServiceImpl
+  class ActaServiceImpl
+  class ReporteServiceImpl
+  class AuditoriaServiceImpl
+}
+
+package "security" {
+  class Sesion {
+    - user : User
+    + iniciar(u : User) : void
+    + usuarioActual() : User
+    + cerrar() : void
+  }
+  class PasswordEncoder {
+    + encode(clave : char[]) : String
+    + matches(clave : char[], hash : String) : boolean
+  }
+  class Autorizador {
+    + exigirRol(roles : Rol...) : void
+    + exigirProfesorDeComision(comisionId : Long) : void
+  }
+}
+
+package "rule" {
+  class CalculadoraRegularidad {
+    + {static} UMBRAL : BigDecimal = 70
+    + porcentaje(asistencias : List<Asistencia>, clasesDictadas : int) : BigDecimal
+    + esRegular(porcentaje : BigDecimal) : boolean
+  }
+  class CalculadoraCondicion {
+    + promedio(notas : List<Nota>) : BigDecimal
+    + estadoDeCursada(porcentaje : BigDecimal, promedio : BigDecimal) : EstadoCursada
+    + resultadoFinal(valor : BigDecimal) : EstadoCursada
+  }
+  class ValidadorCorrelativas {
+    + faltantes(alumnoId : Long, materiaId : Long) : List<Materia>
+    + generaCiclo(materia : Materia, correlativa : Materia) : boolean
+  }
+}
+
+package "report" {
+  interface Exportador {
+    + exportar(libro : LibroDeActas) : byte[]
+  }
+  class ExportadorPdf
+  class ExportadorExcel
+  class ExportadorCsv
+  class ReporteAsistencia
+  class ReporteRendimiento
+  class AlumnoEnRiesgo
+  class LibroDeActas
+  class SituacionAcademica
+}
+
+package "repository" {
+  interface UserRepository
+  interface AlumnoRepository
+  interface ProfesorRepository
+  interface MateriaRepository
+  interface CarreraRepository
+  interface PlanEstudioRepository
+  interface CuatrimestreRepository
+  interface ModuloHorarioRepository
+  interface ComisionMateriaRepository
+  interface HorarioClaseRepository
+  interface AlumnoCarreraRepository
+  interface AlumnoInscriptoRepository
+  interface AsistenciaRepository
+  interface ExamenRepository
+  interface NotaRepository
+  interface ActaFinalRepository
+  interface RegistroAuditoriaRepository
+}
+
+ExportadorPdf ..|> Exportador
+ExportadorExcel ..|> Exportador
+ExportadorCsv ..|> Exportador
+
+AuthServiceImpl --> PasswordEncoder
+AuthServiceImpl --> Sesion
+AuthServiceImpl --> UserRepository
+UsuarioServiceImpl --> Autorizador
+UsuarioServiceImpl --> PasswordEncoder
+UsuarioServiceImpl --> UserRepository
+AlumnoServiceImpl --> UserRepository
+AlumnoServiceImpl --> AlumnoRepository
+AlumnoServiceImpl --> AlumnoCarreraRepository
+ProfesorServiceImpl --> ProfesorRepository
+MateriaServiceImpl --> MateriaRepository
+MateriaServiceImpl --> ValidadorCorrelativas
+OfertaAcademicaServiceImpl --> CarreraRepository
+OfertaAcademicaServiceImpl --> PlanEstudioRepository
+OfertaAcademicaServiceImpl --> CuatrimestreRepository
+OfertaAcademicaServiceImpl --> ModuloHorarioRepository
+ComisionServiceImpl --> ComisionMateriaRepository
+ComisionServiceImpl --> HorarioClaseRepository
+InscripcionServiceImpl --> ValidadorCorrelativas
+InscripcionServiceImpl --> AlumnoInscriptoRepository
+AsistenciaServiceImpl --> Autorizador
+AsistenciaServiceImpl --> CalculadoraRegularidad
+AsistenciaServiceImpl --> AsistenciaRepository
+NotaServiceImpl --> CalculadoraCondicion
+NotaServiceImpl --> ExamenRepository
+NotaServiceImpl --> NotaRepository
+ActaServiceImpl --> CalculadoraCondicion
+ActaServiceImpl --> ActaFinalRepository
+ReporteServiceImpl --> CalculadoraRegularidad
+ReporteServiceImpl --> Exportador
+ReporteServiceImpl --> AlumnoInscriptoRepository
+AuditoriaServiceImpl --> RegistroAuditoriaRepository
+
+note as N1
+  Cada XServiceImpl implementa la interfaz XService.
+  Todos los servicios usan Autorizador para verificar permisos;
+  los que modifican asistencias, notas, cierres y reaperturas
+  usan AuditoriaService. Los repositorios son interfaces cuya
+  implementación depende de la variante (escritorio o web).
+end note
+@enduml

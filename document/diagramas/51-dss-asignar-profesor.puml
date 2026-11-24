@@ -1,0 +1,18 @@
+@startuml dss-asignar-profesor
+skinparam shadowing false
+title DSS - UC-07 Asignar profesor a comisión
+actor "Administrativo" as U
+participant ":Sistema" as S
+U -> S : asignarProfesor(comisionId, profesorId)
+opt la comisión ya tiene profesor asignado
+  S --> U : solicita confirmar el reemplazo
+  U -> S : confirma el reemplazo
+end
+alt profesor ACTIVO y materia ACTIVA
+  S --> U : comisión con el profesor asignado
+else profesor INACTIVO
+  S --> U : "El profesor está inactivo"
+else materia INACTIVA
+  S --> U : "La materia está inactiva"
+end
+@enduml

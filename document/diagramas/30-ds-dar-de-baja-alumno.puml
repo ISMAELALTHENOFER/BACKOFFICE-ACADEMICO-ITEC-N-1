@@ -1,0 +1,26 @@
+@startuml ds-dar-de-baja-alumno
+skinparam shadowing false
+title DS - darDeBajaAlumno(alumnoId)
+actor Administrativo
+participant ":AlumnoController" as C
+participant ":AlumnoServiceImpl" as S
+participant ":Autorizador" as AU
+participant ":AlumnoRepository" as R
+participant "a:Alumno" as A
+
+Administrativo -> C : darDeBaja()
+C -> S : darDeBaja(id)
+S -> AU : exigirRol(ADMINISTRATIVO, ADMIN)
+S -> R : findById(id)
+R --> S : Optional<Alumno>
+alt alumno existe
+  S -> A : setEstado(INACTIVO)
+  S -> R : save(a)
+  note right of R : baja lógica (RN-06):\nse conservan carreras y cursadas
+  S --> C : ok
+  C --> Administrativo : alumno dado de baja
+else no existe
+  S --> C : NotFoundException
+  C --> Administrativo : "Alumno no encontrado"
+end
+@enduml

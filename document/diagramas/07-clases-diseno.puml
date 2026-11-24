@@ -2,12 +2,48 @@
 !pragma layout smetana
 skinparam shadowing false
 skinparam classAttributeIconSize 0
-title Diagrama de clases de diseño - controladores, servicios y persistencia
+title Diagrama de clases de diseño - controladores y servicios
 left to right direction
 
 package "controller" {
   class AuthController {
     + login() : void
+    + cerrarSesion() : void
+  }
+  class UsuarioController {
+    + guardar() : void
+    + modificar() : void
+    + cambiarEstado() : void
+    + restablecerContrasena() : void
+  }
+  class AlumnoController {
+    + guardar() : void
+    + buscar() : void
+    + modificar() : void
+    + darDeBaja() : void
+    + inscribirEnCarrera() : void
+  }
+  class ProfesorController {
+    + guardar() : void
+    + modificar() : void
+    + darDeBaja() : void
+  }
+  class MateriaController {
+    + guardar() : void
+    + modificar() : void
+    + darDeBaja() : void
+    + agregarCorrelativa() : void
+  }
+  class OfertaAcademicaController {
+    + guardarCarrera() : void
+    + guardarPlan() : void
+    + guardarCuatrimestre() : void
+    + guardarModulo() : void
+  }
+  class ComisionController {
+    + guardar() : void
+    + agregarHorario() : void
+    + asignar() : void
   }
   class InscripcionController {
     + buscarAlumno() : void
@@ -16,33 +52,38 @@ package "controller" {
   class AsistenciaController {
     + seleccionarHorario() : void
     + guardar() : void
+    + justificar() : void
+    + cerrar() : void
+    + reabrir() : void
+  }
+  class NotaController {
+    + crearExamen() : void
+    + guardar() : void
+    + modificar() : void
   }
   class ActaController {
     + registrarFinal() : void
     + cerrarActa() : void
+    + reabrir() : void
   }
-}
-
-package "security" {
-  class Sesion {
-    - user : User
-    + iniciar(u : User) : void
-    + usuarioActual() : User
-    + cerrar() : void
-  }
-  class PasswordEncoder {
-    + encode(clave : char[]) : String
-    + matches(clave : char[], hash : String) : boolean
-  }
-  class Autorizador {
-    + exigirRol(roles : Rol...) : void
-    + exigirProfesorDeComision(comisionId : Long) : void
+  class ReporteController {
+    + generar() : void
+    + exportar() : void
+    + consultarAuditoria() : void
+    + consultarSituacion() : void
   }
 }
 
 package "service" {
   interface AuthService {
     + login(username : String, clave : char[]) : User
+    + logout() : void
+  }
+  interface UsuarioService {
+    + crear(request : UsuarioRequest) : UsuarioResponse
+    + modificar(id : Long, request : UsuarioRequest) : UsuarioResponse
+    + cambiarEstado(id : Long, activo : boolean) : void
+    + restablecerContrasena(id : Long, clave : char[]) : void
   }
   interface AlumnoService {
     + crear(request : AlumnoRequest) : AlumnoResponse
@@ -51,6 +92,28 @@ package "service" {
     + darDeBaja(id : Long) : void
     + inscribirEnCarrera(alumnoId : Long, planId : Long, anioIngreso : int) : void
   }
+  interface ProfesorService {
+    + crear(request : ProfesorRequest) : ProfesorResponse
+    + modificar(id : Long, request : ProfesorRequest) : ProfesorResponse
+    + darDeBaja(id : Long) : void
+  }
+  interface MateriaService {
+    + crear(request : MateriaRequest) : MateriaResponse
+    + modificar(id : Long, request : MateriaRequest) : MateriaResponse
+    + darDeBaja(id : Long) : void
+    + agregarCorrelativa(materiaId : Long, correlativaId : Long) : void
+  }
+  interface OfertaAcademicaService {
+    + crearCarrera(request : CarreraRequest) : CarreraResponse
+    + crearPlan(carreraId : Long, request : PlanRequest) : PlanResponse
+    + crearCuatrimestre(request : CuatrimestreRequest) : CuatrimestreResponse
+    + crearModulo(request : ModuloRequest) : ModuloResponse
+  }
+  interface ComisionService {
+    + crear(request : ComisionRequest) : ComisionResponse
+    + agregarHorario(comisionId : Long, dia : DayOfWeek, modulosIds : List<Long>) : void
+    + asignarProfesor(comisionId : Long, profesorId : Long) : void
+  }
   interface InscripcionService {
     + inscribir(alumnoCarreraId : Long, comisionId : Long) : AlumnoInscripto
   }
@@ -58,8 +121,10 @@ package "service" {
     + registrar(horarioId : Long, fecha : LocalDate, marcas : Map<Long, EstadoAsistencia>) : void
     + justificar(asistenciaId : Long, motivo : String, certificado : String) : void
     + cerrar(comisionId : Long) : void
+    + reabrir(comisionId : Long, motivo : String) : void
   }
   interface NotaService {
+    + crearExamen(comisionId : Long, request : ExamenRequest) : Examen
     + registrar(inscriptoId : Long, examenId : Long, valor : BigDecimal) : Nota
     + modificar(notaId : Long, valor : BigDecimal) : Nota
     + registrarFinal(actaId : Long, inscriptoId : Long, valor : BigDecimal) : Nota
@@ -68,69 +133,32 @@ package "service" {
     + cerrar(actaId : Long) : void
     + reabrir(actaId : Long, motivo : String) : void
   }
+  interface ReporteService {
+    + asistenciaPorComision(comisionId : Long) : ReporteAsistencia
+    + rendimientoPorAlumno(alumnoId : Long) : ReporteRendimiento
+    + alumnosEnRiesgo(comisionId : Long) : List<AlumnoEnRiesgo>
+    + libroDeActas(filtro : FiltroActas) : LibroDeActas
+    + exportar(libro : LibroDeActas, formato : Formato) : byte[]
+    + situacionAcademica(alumnoId : Long) : SituacionAcademica
+  }
   interface AuditoriaService {
     + registrar(accion : String, entidad : String, id : Long, anterior : String, nuevo : String, motivo : String) : void
+    + consultar(filtro : FiltroAuditoria) : List<RegistroAuditoria>
   }
-}
-
-package "service.impl" {
-  class InscripcionServiceImpl
-  class AsistenciaServiceImpl
-  class NotaServiceImpl
-}
-
-package "rule" {
-  class CalculadoraRegularidad {
-    + {static} UMBRAL : BigDecimal = 70
-    + porcentaje(asistencias : List<Asistencia>, clasesDictadas : int) : BigDecimal
-    + esRegular(porcentaje : BigDecimal) : boolean
-  }
-  class CalculadoraCondicion {
-    + promedio(notas : List<Nota>) : BigDecimal
-    + estadoDeCursada(porcentaje : BigDecimal, promedio : BigDecimal) : EstadoCursada
-    + resultadoFinal(valor : BigDecimal) : EstadoCursada
-  }
-  class ValidadorCorrelativas {
-    + faltantes(alumnoId : Long, materiaId : Long) : List<Materia>
-  }
-}
-
-package "repository" {
-  interface UserRepository
-  interface AlumnoInscriptoRepository
-  interface AsistenciaRepository
-  interface NotaRepository
-  interface ActaFinalRepository
 }
 
 AuthController --> AuthService
+UsuarioController --> UsuarioService
+AlumnoController --> AlumnoService
+ProfesorController --> ProfesorService
+MateriaController --> MateriaService
+OfertaAcademicaController --> OfertaAcademicaService
+ComisionController --> ComisionService
 InscripcionController --> InscripcionService
 AsistenciaController --> AsistenciaService
+NotaController --> NotaService
 ActaController --> NotaService
 ActaController --> ActaService
-AuthService ..> PasswordEncoder
-AuthService ..> Sesion
-AuthService ..> UserRepository
-InscripcionServiceImpl ..|> InscripcionService
-AsistenciaServiceImpl ..|> AsistenciaService
-NotaServiceImpl ..|> NotaService
-InscripcionServiceImpl --> Autorizador
-InscripcionServiceImpl --> ValidadorCorrelativas
-InscripcionServiceImpl --> AlumnoInscriptoRepository
-AsistenciaServiceImpl --> Autorizador
-AsistenciaServiceImpl --> CalculadoraRegularidad
-AsistenciaServiceImpl --> AsistenciaRepository
-AsistenciaServiceImpl --> AuditoriaService
-NotaServiceImpl --> CalculadoraCondicion
-NotaServiceImpl --> NotaRepository
-NotaServiceImpl --> AuditoriaService
-ActaService ..> ActaFinalRepository
-ActaService ..> AuditoriaService
-
-note bottom of InscripcionServiceImpl
-  Cada servicio es una interfaz XService con su
-  implementación XServiceImpl (solo se muestran tres).
-  Los repositorios son interfaces; su implementación
-  depende de la variante (escritorio o web).
-end note
+ReporteController --> ReporteService
+ReporteController --> AuditoriaService
 @enduml

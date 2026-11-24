@@ -1,0 +1,27 @@
+@startuml ds-registrar-plan-estudio
+skinparam shadowing false
+title DS - registrarPlanEstudio(carreraId, nombre, fechaInicio, fechaFin)
+actor Administrativo
+participant ":OfertaAcademicaController" as C
+participant ":OfertaAcademicaServiceImpl" as S
+participant ":Autorizador" as AU
+participant ":CarreraRepository" as CR
+participant ":PlanEstudioRepository" as PR
+
+Administrativo -> C : guardarPlan()
+C -> S : crearPlan(carreraId, request)
+S -> AU : exigirRol(ADMINISTRATIVO, ADMIN)
+S -> S : validar nombre y fechas
+S -> CR : findById(carreraId)
+CR --> S : carrera
+alt carrera encontrada
+  create participant "p:PlanEstudio" as P
+  S -> P : new PlanEstudio(nombre, fechaInicio, fechaFin, carrera)
+  S -> PR : save(p)
+  S --> C : PlanResponse
+  C --> Administrativo : confirmación
+else carrera inexistente
+  S --> C : NotFoundException
+  C --> Administrativo : "Carrera no encontrada"
+end
+@enduml

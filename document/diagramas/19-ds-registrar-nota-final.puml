@@ -28,7 +28,7 @@ alt habilitado
   S --> C : n
   C --> Profesor : confirmación
 else no habilitado
-  S --> C : ReglaNegocioException(detalle)
+  S --> C : ValidacionException(detalle)
   C --> Profesor : motivo del rechazo
 end
 @enduml

@@ -1,0 +1,18 @@
+@startuml dss-reabrir-acta-o-asistencia
+skinparam shadowing false
+title DSS - UC-16 Reabrir acta o asistencia
+actor "Administrativo / Admin" as U
+participant ":Sistema" as S
+alt corrección de un acta final
+  U -> S : reabrirActa(actaId, motivo)
+  S --> U : acta ABIERTA; cursadas vuelven a REGULAR; reapertura auditada
+else corrección de la asistencia de una comisión
+  U -> S : reabrirAsistencia(comisionId, motivo)
+  S --> U : asistencia abierta; cursadas vuelven a EN_CURSO; reapertura auditada
+end
+note right of S
+  Motivo vacío: "Debe indicar el motivo".
+  Usuario sin rol ADMINISTRATIVO o ADMIN,
+  o registro no cerrado: "Operación no permitida".
+end note
+@enduml

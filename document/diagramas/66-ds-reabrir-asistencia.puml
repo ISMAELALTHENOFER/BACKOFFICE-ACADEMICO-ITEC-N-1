@@ -1,0 +1,34 @@
+@startuml ds-reabrir-asistencia
+skinparam shadowing false
+title DS - reabrirAsistencia(comisionId, motivo)
+actor Administrativo
+participant ":AsistenciaController" as C
+participant ":AsistenciaServiceImpl" as S
+participant ":Autorizador" as AU
+participant ":ComisionMateriaRepository" as CR
+participant ":AlumnoInscriptoRepository" as IR
+participant ":AuditoriaService" as AUD
+
+Administrativo -> C : reabrir()
+C -> S : reabrir(comisionId, motivo)
+S -> AU : exigirRol(ADMINISTRATIVO, ADMIN)
+S -> S : validar motivo no vacío
+S -> CR : findById(comisionId)
+CR --> S : comisión
+alt asistenciaCerrada = verdadero
+  group transacción
+    S -> IR : findByComisionAndEstados(comisionId, RECURSA, REGULAR, PROMOCIONADO)
+    IR --> S : inscriptos
+    loop por cada inscripto
+      S -> IR : actualizarEstado(inscriptoId, EN_CURSO, null)
+    end
+    S -> CR : marcarAsistenciaAbierta(comisionId)
+    S -> AUD : registrar("REAPERTURA_ASISTENCIA", "comision_materia", comisionId, "CERRADA", "ABIERTA", motivo)
+  end
+  S --> C : ok
+  C --> Administrativo : asistencia reabierta
+else motivo vacío o asistencia abierta
+  S --> C : ValidacionException | OperacionNoPermitidaException
+  C --> Administrativo : motivo del rechazo
+end
+@enduml

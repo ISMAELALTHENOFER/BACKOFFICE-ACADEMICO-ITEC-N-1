@@ -1,0 +1,16 @@
+@startuml ds-exportar-libro-de-actas
+skinparam shadowing false
+title DS - exportarLibroDeActas(formato)
+actor Usuario
+participant ":ReporteController" as C
+participant ":ReporteServiceImpl" as S
+participant ":Exportador" as EX
+
+Usuario -> C : exportar()
+C -> S : exportar(libro, formato)
+S -> S : seleccionar exportador según formato (PDF | Excel | CSV)
+S -> EX : exportar(libro)
+EX --> S : byte[]
+S --> C : byte[]
+C --> Usuario : archivo del libro de actas
+@enduml
