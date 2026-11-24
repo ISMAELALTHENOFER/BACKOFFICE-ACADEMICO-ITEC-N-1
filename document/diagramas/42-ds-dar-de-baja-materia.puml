@@ -1,0 +1,25 @@
+@startuml ds-dar-de-baja-materia
+skinparam shadowing false
+title DS - darDeBajaMateria(materiaId)
+actor Administrativo
+participant ":MateriaController" as C
+participant ":MateriaServiceImpl" as S
+participant ":Autorizador" as AU
+participant ":MateriaRepository" as MR
+participant "m:Materia" as M
+
+Administrativo -> C : darDeBaja()
+C -> S : darDeBaja(materiaId)
+S -> AU : exigirRol(ADMINISTRATIVO, ADMIN)
+S -> MR : findById(materiaId)
+MR --> S : m
+alt materia encontrada
+  S -> M : setEstado(INACTIVA)
+  S -> MR : save(m)
+  S --> C : ok
+  C --> Administrativo : materia dada de baja
+else materia inexistente
+  S --> C : NotFoundException
+  C --> Administrativo : "Materia no encontrada"
+end
+@enduml

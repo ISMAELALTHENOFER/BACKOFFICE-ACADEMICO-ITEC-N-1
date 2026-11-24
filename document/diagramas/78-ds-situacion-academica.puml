@@ -1,0 +1,39 @@
+@startuml ds-situacion-academica
+skinparam shadowing false
+title DS - consultarSituacionAcademica()
+actor Alumno
+participant ":ReporteController" as C
+participant ":Sesion" as SES
+participant ":ReporteServiceImpl" as S
+participant ":Autorizador" as AU
+participant ":AlumnoInscriptoRepository" as IR
+participant ":AsistenciaRepository" as AR
+participant ":NotaRepository" as NR
+participant ":CalculadoraCondicion" as CC
+
+Alumno -> C : consultarSituacion()
+C -> SES : usuarioActual()
+SES --> C : usuario (con su alumno asociado)
+C -> S : situacionAcademica(alumnoId)
+S -> AU : exigirRol(ALUMNO)
+S -> SES : usuarioActual()
+SES --> S : usuario
+S -> S : verificar que alumnoId corresponde al usuario (RN-27)
+S -> IR : findByAlumno(alumnoId)
+IR --> S : cursadas (carrera, estado, porcentajeAsistencia)
+alt sin cursadas
+  S --> C : SituacionAcademica vacía
+  C --> Alumno : "No posee cursadas registradas"
+else con cursadas
+  loop por cada cursada
+    S -> AR : findByInscripto(inscriptoId)
+    AR --> S : asistencias (presentes, ausentes, justificadas)
+    S -> NR : findByInscripto(inscriptoId)
+    NR --> S : notas
+    S -> CC : promedio(notas)
+    CC --> S : promedio
+  end
+  S --> C : SituacionAcademica
+  C --> Alumno : carreras y cursadas con asistencia, notas, promedio y estado
+end
+@enduml

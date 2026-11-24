@@ -1,0 +1,45 @@
+@startuml ds-reporte-rendimiento
+skinparam shadowing false
+title DS - generarReporteRendimiento(alumnoId)
+actor Usuario
+participant ":ReporteController" as C
+participant ":ReporteServiceImpl" as S
+participant ":Autorizador" as AU
+participant ":Sesion" as SES
+participant ":AlumnoRepository" as ALR
+participant ":AlumnoInscriptoRepository" as IR
+participant ":NotaRepository" as NR
+participant ":CalculadoraCondicion" as CC
+
+Usuario -> C : generar()
+C -> S : rendimientoPorAlumno(alumnoId)
+S -> AU : exigirRol(PROFESOR, ADMINISTRATIVO, ADMIN)
+S -> ALR : findById(alumnoId)
+alt alumno inexistente
+  ALR --> S : vacío
+  S --> C : NotFoundException
+  C --> Usuario : "Alumno inexistente"
+else alumno encontrado
+  ALR --> S : alumno
+  S -> IR : findByAlumno(alumnoId)
+  IR --> S : cursadas (estado, notaFinal)
+  S -> SES : usuarioActual()
+  SES --> S : usuario
+  opt usuario con rol PROFESOR
+    S -> S : conservar solo cursadas de sus comisiones
+  end
+  loop por cada cursada
+    S -> NR : findByInscripto(inscriptoId)
+    NR --> S : notas (parciales, recuperatorios y TP)
+    S -> CC : promedio(notas)
+    CC --> S : promedio
+  end
+  alt sin notas registradas
+    S --> C : ReporteRendimiento vacío
+    C --> Usuario : "Sin calificaciones registradas"
+  else con notas
+    S --> C : ReporteRendimiento
+    C --> Usuario : parciales, nota final, estado y promedio
+  end
+end
+@enduml

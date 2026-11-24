@@ -1,0 +1,33 @@
+@startuml ds-crear-profesor
+skinparam shadowing false
+title DS - crearProfesor(datos)
+actor Administrativo
+participant ":ProfesorController" as C
+participant ":ProfesorServiceImpl" as S
+participant ":Autorizador" as AU
+participant ":UserRepository" as UR
+participant ":PasswordEncoder" as PE
+participant ":ProfesorRepository" as R
+
+Administrativo -> C : guardar()
+C -> S : crear(request)
+S -> AU : exigirRol(ADMINISTRATIVO, ADMIN)
+S -> S : validar campos (DNI 7-8 dígitos, email, teléfono)
+S -> UR : existsByDniOrEmailOrUsername(dni, email, username)
+UR --> S : boolean
+alt datos disponibles
+  S -> PE : encode(contraseña)
+  PE --> S : hash
+  create participant "u:User" as U
+  S -> U : new User(datos, hash, {PROFESOR}, activo)
+  S -> UR : save(u)
+  create participant "p:Profesor" as P
+  S -> P : new Profesor(u, ACTIVO)
+  S -> R : save(p)
+  S --> C : ProfesorResponse
+  C --> Administrativo : confirmación
+else dato duplicado
+  S --> C : DataExistException
+  C --> Administrativo : mensaje de error
+end
+@enduml

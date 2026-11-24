@@ -1,0 +1,46 @@
+@startuml ds-agregar-correlativa
+skinparam shadowing false
+title DS - agregarCorrelativa(materiaId, correlativaId)
+actor Administrativo
+participant ":MateriaController" as C
+participant ":MateriaServiceImpl" as S
+participant ":Autorizador" as AU
+participant ":MateriaRepository" as MR
+participant ":ValidadorCorrelativas" as V
+participant "x:Materia" as X
+participant "m:Materia" as M
+
+Administrativo -> C : agregarCorrelativa()
+C -> S : agregarCorrelativa(materiaId, correlativaId)
+S -> AU : exigirRol(ADMINISTRATIVO, ADMIN)
+S -> MR : findById(materiaId)
+MR --> S : m
+S -> MR : findById(correlativaId)
+MR --> S : c
+alt alguna materia no existe
+  S --> C : NotFoundException
+  C --> Administrativo : "Materia no encontrada"
+else materiaId = correlativaId
+  S --> C : ValidacionException
+  C --> Administrativo : "Una materia no puede ser\ncorrelativa de sí misma"
+else materias distintas
+  S -> V : generaCiclo(m, c)
+  V -> V : pendientes = {c}\nvisitadas = {}
+  loop mientras queden pendientes y no se haya alcanzado m
+    V -> V : x = siguiente pendiente no visitada
+    V -> X : getCorrelativas()
+    X --> V : correlativas de x
+    V -> V : marcar x como visitada y\nagregar sus correlativas a pendientes
+  end
+  V --> S : true si m es alcanzable desde c
+  alt genera ciclo
+    S --> C : ValidacionException(ciclo detectado)
+    C --> Administrativo : "La correlativa genera un ciclo"
+  else sin ciclo
+    S -> M : agregarCorrelativa(c)
+    S -> MR : save(m)
+    S --> C : ok
+    C --> Administrativo : correlativa registrada
+  end
+end
+@enduml

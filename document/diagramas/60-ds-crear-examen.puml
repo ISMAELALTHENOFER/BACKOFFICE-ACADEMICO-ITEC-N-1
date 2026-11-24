@@ -1,0 +1,34 @@
+@startuml ds-crear-examen
+skinparam shadowing false
+title DS - crearExamen(comisionId, tipo, fecha, descripcion, parcialRecuperadoId)
+actor Profesor
+participant ":NotaController" as C
+participant ":NotaServiceImpl" as S
+participant ":ComisionMateriaRepository" as CR
+participant ":Autorizador" as AU
+participant ":ExamenRepository" as ER
+
+Profesor -> C : crearExamen()
+C -> S : crearExamen(comisionId, ExamenRequest)
+S -> CR : findById(comisionId)
+CR --> S : comisión
+S -> AU : exigirProfesorDeComision(comisionId)
+S -> S : validar asistenciaCerrada = falso, tipo TP | PARCIAL | RECUPERATORIO y fecha
+opt tipo = RECUPERATORIO
+  S -> ER : findById(parcialRecuperadoId)
+  ER --> S : parcial
+  S -> ER : findRecuperatorioDe(parcialRecuperadoId)
+  ER --> S : Optional<Examen>
+  S -> S : validar PARCIAL de la misma comisión y sin recuperatorio previo
+end
+alt datos válidos
+  create participant "e:Examen" as E
+  S -> E : new Examen(comisión, tipo, fecha, descripcion, recuperaA)
+  S -> ER : save(e)
+  S --> C : e
+  C --> Profesor : examen creado
+else datos inválidos
+  S --> C : ValidacionException(detalle)
+  C --> Profesor : motivo del rechazo
+end
+@enduml

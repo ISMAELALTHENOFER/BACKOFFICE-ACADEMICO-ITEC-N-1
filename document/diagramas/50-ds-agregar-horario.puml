@@ -1,0 +1,33 @@
+@startuml ds-agregar-horario
+skinparam shadowing false
+title DS - agregarHorario(comisionId, dia, modulosIds)
+actor Administrativo
+participant ":ComisionController" as C
+participant ":ComisionServiceImpl" as S
+participant ":Autorizador" as AU
+participant ":ComisionMateriaRepository" as CR
+participant ":ModuloHorarioRepository" as MR
+participant ":HorarioClaseRepository" as HR
+
+Administrativo -> C : agregarHorario()
+C -> S : agregarHorario(comisionId, dia, modulosIds)
+S -> AU : exigirRol(ADMINISTRATIVO, ADMIN)
+S -> S : validar día de lunes a viernes\ny al menos un módulo
+S -> CR : findById(comisionId)
+CR --> S : cm
+S -> MR : findAllById(modulosIds)
+MR --> S : List<ModuloHorario>
+alt comisión encontrada y todos los módulos existen
+  create participant "h:HorarioClase" as H
+  S -> H : new HorarioClase(cm, dia, modulos)
+  S -> HR : save(h)
+  S --> C : ok
+  C --> Administrativo : horario agregado
+else comisión o módulo inexistente
+  S --> C : NotFoundException
+  C --> Administrativo : detalle del error
+else día inválido o sin módulos
+  S --> C : ValidacionException
+  C --> Administrativo : campo con error
+end
+@enduml

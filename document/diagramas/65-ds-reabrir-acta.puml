@@ -1,0 +1,35 @@
+@startuml ds-reabrir-acta
+skinparam shadowing false
+title DS - reabrirActa(actaId, motivo)
+actor Administrativo
+participant ":ActaController" as C
+participant ":ActaServiceImpl" as S
+participant ":Autorizador" as AU
+participant ":ActaFinalRepository" as AC
+participant ":NotaRepository" as NR
+participant ":AlumnoInscriptoRepository" as IR
+participant ":AuditoriaService" as AUD
+
+Administrativo -> C : reabrir()
+C -> S : reabrir(actaId, motivo)
+S -> AU : exigirRol(ADMINISTRATIVO, ADMIN)
+S -> S : validar motivo no vacío
+S -> AC : findById(actaId)
+AC --> S : acta
+alt acta CERRADA
+  group transacción
+    S -> NR : findByExamen(examenFinalId)
+    NR --> S : notas finales
+    loop por cada nota final
+      S -> IR : actualizarEstado(inscriptoId, REGULAR, null)
+    end
+    S -> AC : marcarAbierta(actaId)
+    S -> AUD : registrar("REAPERTURA_ACTA", "acta_final", actaId, "CERRADA", "ABIERTA", motivo)
+  end
+  S --> C : ok
+  C --> Administrativo : acta reabierta
+else motivo vacío o acta ABIERTA
+  S --> C : ValidacionException | OperacionNoPermitidaException
+  C --> Administrativo : motivo del rechazo
+end
+@enduml

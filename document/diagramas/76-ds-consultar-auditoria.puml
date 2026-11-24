@@ -1,0 +1,23 @@
+@startuml ds-consultar-auditoria
+skinparam shadowing false
+title DS - consultarAuditoria(filtro)
+actor Usuario
+participant ":ReporteController" as C
+participant ":AuditoriaServiceImpl" as S
+participant ":Autorizador" as AU
+participant ":RegistroAuditoriaRepository" as RR
+
+Usuario -> C : consultarAuditoria()
+C -> S : consultar(filtro)
+S -> AU : exigirRol(ADMINISTRATIVO, ADMIN)
+alt usuario ADMINISTRATIVO o ADMIN
+  S -> RR : findByFiltro(fecha, usuario, entidad)
+  RR --> S : List<RegistroAuditoria>
+  S --> C : List<RegistroAuditoria>
+  C --> Usuario : eventos con acción, entidad, valores, usuario, fecha y motivo
+else otro rol
+  AU --> S : AccesoDenegadoException
+  S --> C : AccesoDenegadoException
+  C --> Usuario : "Operación no permitida"
+end
+@enduml

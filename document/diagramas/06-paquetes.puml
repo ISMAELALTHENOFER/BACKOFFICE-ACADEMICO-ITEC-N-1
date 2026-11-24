@@ -10,6 +10,7 @@ package "itec.backoffice" {
   folder "service" as srv
   folder "service.impl" as impl
   folder "rule" as rule
+  folder "report" as rep
   folder "security" as sec
   folder "model" as model
   folder "exception" as exc
@@ -23,6 +24,8 @@ ctrl ..> dto
 ctrl ..> sec
 impl ..|> srv
 impl ..> rule
+impl ..> rep
+rep ..> model
 impl ..> repo
 impl ..> model
 impl ..> exc

@@ -1,0 +1,32 @@
+@startuml ds-restablecer-contrasena
+skinparam shadowing false
+title DS - restablecerContraseña(usuarioId, nuevaContraseña)
+actor "Administrativo / Admin" as Act
+participant ":UsuarioController" as C
+participant ":UsuarioServiceImpl" as S
+participant ":Autorizador" as AU
+participant ":UserRepository" as UR
+participant ":PasswordEncoder" as PE
+participant "u:User" as U
+
+Act -> C : restablecerContrasena()
+C -> S : restablecerContrasena(id, clave)
+S -> AU : exigirRol(ADMINISTRATIVO, ADMIN)
+S -> UR : findById(id)
+UR --> S : Optional<User>
+alt usuario existe
+  opt u.roles incluye ADMIN o ADMINISTRATIVO (RN-02)
+    S -> AU : exigirRol(ADMIN)
+  end
+  S -> PE : encode(clave)
+  PE --> S : hash
+  S -> U : setPasswordHash(hash)
+  S -> U : setFechaModificacion(ahora)
+  S -> UR : save(u)
+  S --> C : ok
+  C --> Act : contraseña restablecida
+else no existe
+  S --> C : NotFoundException
+  C --> Act : "Usuario no encontrado"
+end
+@enduml

@@ -1,0 +1,28 @@
+@startuml ds-libro-de-actas
+skinparam shadowing false
+title DS - generarLibroDeActas(filtro)
+actor Usuario
+participant ":ReporteController" as C
+participant ":ReporteServiceImpl" as S
+participant ":Autorizador" as AU
+participant ":Sesion" as SES
+participant ":ActaFinalRepository" as AC
+participant ":NotaRepository" as NR
+
+Usuario -> C : generar()
+C -> S : libroDeActas(filtro)
+S -> AU : exigirRol(PROFESOR, ADMINISTRATIVO, ADMIN)
+S -> SES : usuarioActual()
+SES --> S : usuario
+S -> AC : findByFiltro(filtro)
+AC --> S : actas (materia, comisión, cuatrimestre)
+opt usuario con rol PROFESOR
+  S -> S : conservar solo actas de sus comisiones
+end
+loop por cada acta
+  S -> NR : findByExamen(examenFinalId)
+  NR --> S : notas finales
+end
+S --> C : LibroDeActas
+C --> Usuario : libro de actas
+@enduml

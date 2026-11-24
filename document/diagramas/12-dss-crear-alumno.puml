@@ -1,8 +1,14 @@
 @startuml dss-crear-alumno
 skinparam shadowing false
-title DSS - UC-03 Gestionar alumnos (Crear)
+title DSS - UC-03 Gestionar alumnos e inscripción a carrera
 actor "Administrativo" as U
 participant ":Sistema" as S
+U -> S : consultarAlumno(dni)
+alt alumno encontrado
+  S --> U : datos del alumno y carreras en las que está inscripto
+else no existe
+  S --> U : "Alumno no encontrado"
+end
 U -> S : crearAlumno(username, contraseña, nombre, apellido, dni, email, teléfono)
 alt datos válidos y DNI, email y username no registrados
   S --> U : usuario con rol ALUMNO y alumno ACTIVO creados
@@ -11,6 +17,18 @@ else DNI, email o username duplicado
 else datos inválidos
   S --> U : detalle de campos inválidos
 end
+U -> S : modificarAlumno(alumnoId, nombre, apellido, dni, email, teléfono)
+alt datos válidos y no duplicados
+  S --> U : alumno actualizado
+else dato duplicado o inválido
+  S --> U : mensaje de error
+end
+U -> S : darDeBajaAlumno(alumnoId)
+S --> U : alumno INACTIVO; historial conservado
 U -> S : inscribirEnCarrera(alumnoId, planEstudioId, anioIngreso)
-S --> U : alumno asociado a la carrera y al plan
+alt no inscripto en esa carrera
+  S --> U : alumno asociado a la carrera y al plan
+else ya inscripto en la carrera
+  S --> U : "El alumno ya está inscripto en esa carrera"
+end
 @enduml

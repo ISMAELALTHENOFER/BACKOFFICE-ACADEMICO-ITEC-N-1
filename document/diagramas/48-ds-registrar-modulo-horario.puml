@@ -1,0 +1,24 @@
+@startuml ds-registrar-modulo-horario
+skinparam shadowing false
+title DS - registrarModuloHorario(numero, horaInicio, horaFin)
+actor Administrativo
+participant ":OfertaAcademicaController" as C
+participant ":OfertaAcademicaServiceImpl" as S
+participant ":Autorizador" as AU
+participant ":ModuloHorarioRepository" as MR
+
+Administrativo -> C : guardarModulo()
+C -> S : crearModulo(request)
+S -> AU : exigirRol(ADMINISTRATIVO, ADMIN)
+S -> S : validar que horaFin sea posterior a horaInicio
+alt horario válido
+  create participant "mh:ModuloHorario" as MH
+  S -> MH : new ModuloHorario(numero, horaInicio, horaFin)
+  S -> MR : save(mh)
+  S --> C : ModuloResponse
+  C --> Administrativo : confirmación
+else hora de fin no posterior
+  S --> C : ValidacionException
+  C --> Administrativo : "La hora de fin debe ser\nposterior a la de inicio"
+end
+@enduml

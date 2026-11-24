@@ -1,0 +1,16 @@
+@startuml dss-cerrar-asistencia
+skinparam shadowing false
+title DSS - UC-11 Cerrar asistencia de comisión
+actor "Profesor" as U
+participant ":Sistema" as S
+U -> S : cerrarAsistencia(comisionId)
+alt clases registradas y ambos parciales cargados para todos los alumnos
+  S --> U : asistencia cerrada; por alumno: porcentaje, promedio y estado RECURSA / REGULAR / PROMOCIONADO
+else no hay clases registradas
+  S --> U : "Sin registros"
+else alumnos sin ambos parciales
+  S --> U : lista de alumnos con parciales pendientes
+else no es el profesor de la comisión o asistencia ya cerrada
+  S --> U : "Operación no permitida"
+end
+@enduml

@@ -33,7 +33,7 @@ alt todos los inscriptos tienen nota
   S --> C : ok
   C --> Profesor : acta cerrada
 else faltan notas
-  S --> C : ReglaNegocioException(alumnos sin nota)
+  S --> C : ValidacionException(alumnos sin nota)
   C --> Profesor : lista de pendientes
 end
 @enduml

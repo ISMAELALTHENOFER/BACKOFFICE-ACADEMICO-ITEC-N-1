@@ -1,0 +1,26 @@
+@startuml ds-registrar-cuatrimestre
+skinparam shadowing false
+title DS - registrarCuatrimestre(anio, numero, fechaInicio, fechaFin)
+actor Administrativo
+participant ":OfertaAcademicaController" as C
+participant ":OfertaAcademicaServiceImpl" as S
+participant ":Autorizador" as AU
+participant ":CuatrimestreRepository" as CR
+
+Administrativo -> C : guardarCuatrimestre()
+C -> S : crearCuatrimestre(request)
+S -> AU : exigirRol(ADMINISTRATIVO, ADMIN)
+S -> S : validar número 1 o 2 y fechas
+S -> CR : existsByAnioAndNumero(anio, numero)
+CR --> S : boolean
+alt combinación disponible
+  create participant "q:Cuatrimestre" as Q
+  S -> Q : new Cuatrimestre(anio, numero, fechaInicio, fechaFin)
+  S -> CR : save(q)
+  S --> C : CuatrimestreResponse
+  C --> Administrativo : confirmación
+else año y número ya registrados
+  S --> C : DataExistException
+  C --> Administrativo : "Ya existe el cuatrimestre\npara ese año y número"
+end
+@enduml

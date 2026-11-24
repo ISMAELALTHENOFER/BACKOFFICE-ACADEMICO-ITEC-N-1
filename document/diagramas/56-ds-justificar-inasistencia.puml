@@ -1,0 +1,42 @@
+@startuml ds-justificar-inasistencia
+skinparam shadowing false
+title DS - justificarInasistencia(asistenciaId, motivo, certificado)
+actor Usuario
+participant ":AsistenciaController" as C
+participant ":AsistenciaServiceImpl" as S
+participant ":Sesion" as SE
+participant ":Autorizador" as AU
+participant ":AsistenciaRepository" as AR
+participant ":CalculadoraRegularidad" as CALC
+participant ":AlumnoInscriptoRepository" as IR
+participant ":AuditoriaService" as AUD
+
+Usuario -> C : justificar()
+C -> S : justificar(asistenciaId, motivo, certificado)
+S -> S : validar motivo no vacío
+S -> AR : findById(asistenciaId)
+AR --> S : asistencia a (horario, comisión e inscripto)
+S -> AU : exigirRol(PROFESOR, ADMINISTRATIVO, ADMIN)
+S -> SE : usuarioActual()
+SE --> S : usuario
+opt usuario con rol PROFESOR
+  S -> AU : exigirProfesorDeComision(comisionId)
+end
+S -> S : validar a.estado = AUSENTE y asistencia de la comisión abierta
+alt validaciones correctas
+  S -> AR : justificar(asistenciaId, motivo, certificado)
+  S -> AUD : registrar("JUSTIFICACION_ASISTENCIA", "asistencia", asistenciaId, "AUSENTE", "JUSTIFICADA", motivo)
+  S -> AR : findByInscripto(inscriptoId)
+  AR --> S : asistencias
+  S -> AR : contarClasesDictadas(comisionId)
+  AR --> S : clasesDictadas
+  S -> CALC : porcentaje(asistencias, clasesDictadas)
+  CALC --> S : porcentaje
+  S -> IR : actualizarPorcentaje(inscriptoId, porcentaje)
+  S --> C : ok
+  C --> Usuario : inasistencia justificada y porcentaje actualizado
+else motivo vacío, estado distinto de AUSENTE o asistencia cerrada
+  S --> C : ValidacionException | OperacionNoPermitidaException
+  C --> Usuario : motivo del rechazo
+end
+@enduml

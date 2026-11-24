@@ -1,0 +1,12 @@
+@startuml dss-consultar-situacion-academica
+skinparam shadowing false
+title DSS - UC-18 Consultar situación académica
+actor "Alumno" as U
+participant ":Sistema" as S
+U -> S : consultarSituacionAcademica()
+alt el alumno tiene cursadas
+  S --> U : carreras y cursadas con asistencia, notas, promedio y estado
+else sin inscripciones
+  S --> U : "No posee cursadas registradas"
+end
+@enduml

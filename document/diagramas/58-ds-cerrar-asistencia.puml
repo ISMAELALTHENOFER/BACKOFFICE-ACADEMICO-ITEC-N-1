@@ -1,0 +1,56 @@
+@startuml ds-cerrar-asistencia
+skinparam shadowing false
+title DS - cerrarAsistencia(comisionId)
+actor Profesor
+participant ":AsistenciaController" as C
+participant ":AsistenciaServiceImpl" as S
+participant ":ComisionMateriaRepository" as CR
+participant ":Autorizador" as AU
+participant ":AsistenciaRepository" as AR
+participant ":AlumnoInscriptoRepository" as IR
+participant ":NotaRepository" as NR
+participant ":CalculadoraRegularidad" as CALC
+participant ":CalculadoraCondicion" as CC
+participant ":AuditoriaService" as AUD
+
+Profesor -> C : cerrar()
+C -> S : cerrar(comisionId)
+S -> CR : findById(comisionId)
+CR --> S : comisión
+S -> AU : exigirProfesorDeComision(comisionId)
+S -> S : validar asistenciaCerrada = falso
+S -> AR : contarClasesDictadas(comisionId)
+AR --> S : clasesDictadas
+S -> IR : findEnCursoByComision(comisionId)
+IR --> S : inscriptos
+loop por cada inscripto
+  S -> NR : findByInscripto(inscriptoId)
+  NR --> S : notas
+  S -> S : acumular pendientes sin dos parciales
+end
+alt clasesDictadas > 0 y sin pendientes
+  group transacción
+    loop por cada inscripto
+      S -> AR : findByInscripto(inscriptoId)
+      AR --> S : asistencias
+      S -> CALC : porcentaje(asistencias, clasesDictadas)
+      CALC --> S : porcentaje
+      S -> CC : promedio(notas)
+      CC --> S : promedio
+      S -> CC : estadoDeCursada(porcentaje, promedio)
+      CC --> S : RECURSA | REGULAR | PROMOCIONADO
+      S -> IR : actualizarCondicion(inscriptoId, porcentaje, promedio, estado)
+    end
+    S -> CR : marcarAsistenciaCerrada(comisionId)
+    S -> AUD : registrar("CIERRE_ASISTENCIA", "comision_materia", comisionId, "ABIERTA", "CERRADA", null)
+  end
+  S --> C : ok
+  C --> Profesor : estado de cada cursada
+else clasesDictadas = 0
+  S --> C : ValidacionException("Sin registros")
+  C --> Profesor : "Sin registros"
+else hay pendientes
+  S --> C : ValidacionException(alumnos sin ambos parciales)
+  C --> Profesor : lista de pendientes
+end
+@enduml

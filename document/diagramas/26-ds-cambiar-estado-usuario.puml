@@ -1,0 +1,29 @@
+@startuml ds-cambiar-estado-usuario
+skinparam shadowing false
+title DS - cambiarEstadoUsuario(usuarioId, activo)
+actor "Administrativo / Admin" as Act
+participant ":UsuarioController" as C
+participant ":UsuarioServiceImpl" as S
+participant ":Autorizador" as AU
+participant ":UserRepository" as UR
+participant "u:User" as U
+
+Act -> C : cambiarEstado()
+C -> S : cambiarEstado(id, activo)
+S -> AU : exigirRol(ADMINISTRATIVO, ADMIN)
+S -> UR : findById(id)
+UR --> S : Optional<User>
+alt usuario existe
+  opt u.roles incluye ADMIN o ADMINISTRATIVO (RN-02)
+    S -> AU : exigirRol(ADMIN)
+  end
+  S -> U : setActivo(activo)
+  S -> U : setFechaModificacion(ahora)
+  S -> UR : save(u)
+  S --> C : ok
+  C --> Act : cuenta activada o desactivada
+else no existe
+  S --> C : NotFoundException
+  C --> Act : "Usuario no encontrado"
+end
+@enduml

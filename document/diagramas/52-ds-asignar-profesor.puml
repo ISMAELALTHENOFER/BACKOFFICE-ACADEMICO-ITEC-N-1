@@ -1,0 +1,32 @@
+@startuml ds-asignar-profesor
+skinparam shadowing false
+title DS - asignarProfesor(comisionId, profesorId)
+actor Administrativo
+participant ":ComisionController" as C
+participant ":ComisionServiceImpl" as S
+participant ":Autorizador" as AU
+participant ":ComisionMateriaRepository" as CR
+participant ":ProfesorRepository" as PR
+participant "cm:ComisionMateria" as CM
+
+Administrativo -> C : asignar()
+opt la comisión ya tiene profesor asignado
+  C --> Administrativo : solicita confirmar el reemplazo
+  Administrativo -> C : confirma
+end
+C -> S : asignarProfesor(comisionId, profesorId)
+S -> AU : exigirRol(ADMINISTRATIVO, ADMIN)
+S -> CR : findById(comisionId)
+CR --> S : cm (con su materia)
+S -> PR : findById(profesorId)
+PR --> S : p
+alt p.estado = ACTIVO y materia ACTIVA
+  S -> CM : setProfesor(p)
+  S -> CR : save(cm)
+  S --> C : ok
+  C --> Administrativo : asignación actualizada
+else profesor INACTIVO o materia INACTIVA
+  S --> C : ValidacionException
+  C --> Administrativo : motivo del rechazo
+end
+@enduml

@@ -1,0 +1,40 @@
+@startuml ds-reporte-asistencia
+skinparam shadowing false
+title DS - generarReporteAsistencia(comisionId)
+actor Usuario
+participant ":ReporteController" as C
+participant ":ReporteServiceImpl" as S
+participant ":Autorizador" as AU
+participant ":Sesion" as SES
+participant ":AlumnoInscriptoRepository" as IR
+participant ":AsistenciaRepository" as AR
+participant ":CalculadoraRegularidad" as CALC
+
+Usuario -> C : generar()
+C -> S : asistenciaPorComision(comisionId)
+S -> AU : exigirRol(PROFESOR, ADMINISTRATIVO, ADMIN)
+S -> SES : usuarioActual()
+SES --> S : usuario
+opt usuario con rol PROFESOR
+  S -> AU : exigirProfesorDeComision(comisionId)
+end
+S -> IR : findByComision(comisionId)
+IR --> S : inscriptos
+S -> AR : contarClasesDictadas(comisionId)
+AR --> S : clasesDictadas
+alt clasesDictadas = 0
+  S --> C : ReporteAsistencia vacío
+  C --> Usuario : "Sin registros"
+else hay clases registradas
+  loop por cada inscripto
+    S -> AR : findByInscripto(inscriptoId)
+    AR --> S : asistencias
+    S -> CALC : porcentaje(asistencias, clasesDictadas)
+    CALC --> S : porcentaje
+    S -> CALC : esRegular(porcentaje)
+    CALC --> S : REGULAR | NO_REGULAR
+  end
+  S --> C : ReporteAsistencia
+  C --> Usuario : porcentaje y condición por alumno
+end
+@enduml

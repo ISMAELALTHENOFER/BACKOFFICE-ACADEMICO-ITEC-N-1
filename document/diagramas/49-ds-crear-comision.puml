@@ -1,0 +1,35 @@
+@startuml ds-crear-comision
+skinparam shadowing false
+title DS - crearComision(materiaId, cuatrimestreId, profesorId)
+actor Administrativo
+participant ":ComisionController" as C
+participant ":ComisionServiceImpl" as S
+participant ":Autorizador" as AU
+participant ":MateriaRepository" as MR
+participant ":CuatrimestreRepository" as QR
+participant ":ProfesorRepository" as PR
+participant ":ComisionMateriaRepository" as CR
+
+Administrativo -> C : guardar()
+C -> S : crear(request)
+S -> AU : exigirRol(ADMINISTRATIVO, ADMIN)
+S -> MR : findById(materiaId)
+MR --> S : materia
+S -> QR : findById(cuatrimestreId)
+QR --> S : cuatrimestre
+S -> PR : findById(profesorId)
+PR --> S : profesor
+alt alguno no existe
+  S --> C : NotFoundException
+  C --> Administrativo : detalle del error
+else materia ACTIVA y profesor ACTIVO
+  create participant "cm:ComisionMateria" as CM
+  S -> CM : new ComisionMateria(materia, cuatrimestre,\nprofesor, asistenciaCerrada = false)
+  S -> CR : save(cm)
+  S --> C : ComisionResponse
+  C --> Administrativo : confirmación
+else materia o profesor INACTIVO
+  S --> C : ValidacionException
+  C --> Administrativo : motivo del rechazo
+end
+@enduml

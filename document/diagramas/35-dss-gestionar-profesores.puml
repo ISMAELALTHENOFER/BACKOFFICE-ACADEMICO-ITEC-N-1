@@ -1,0 +1,28 @@
+@startuml dss-gestionar-profesores
+skinparam shadowing false
+title DSS - UC-04 Gestionar profesores
+actor "Administrativo" as U
+participant ":Sistema" as S
+U -> S : crearProfesor(username, contraseña, nombre, apellido, dni, email, teléfono)
+alt datos válidos y DNI, email y username no registrados
+  S --> U : usuario con rol PROFESOR y profesor ACTIVO creados
+else DNI, email o username duplicado
+  S --> U : "Ya existe un usuario con ese dato"
+else datos inválidos
+  S --> U : detalle de campos inválidos
+end
+U -> S : modificarProfesor(profesorId, nombre, apellido, dni, email, teléfono)
+alt profesor existente y datos válidos
+  S --> U : datos del profesor actualizados
+else profesor inexistente
+  S --> U : "Profesor no encontrado"
+else DNI o email duplicado, o datos inválidos
+  S --> U : detalle del error
+end
+U -> S : darDeBajaProfesor(profesorId)
+alt profesor existente
+  S --> U : profesor en estado INACTIVO
+else profesor inexistente
+  S --> U : "Profesor no encontrado"
+end
+@enduml

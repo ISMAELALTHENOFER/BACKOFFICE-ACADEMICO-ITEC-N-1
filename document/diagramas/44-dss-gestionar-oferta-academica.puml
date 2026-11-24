@@ -1,0 +1,46 @@
+@startuml dss-gestionar-oferta-academica
+skinparam shadowing false
+title DSS - UC-06 Gestionar oferta académica
+actor "Administrativo" as U
+participant ":Sistema" as S
+U -> S : registrarCarrera(nombre)
+alt datos válidos
+  S --> U : carrera registrada
+else nombre vacío
+  S --> U : detalle de campos inválidos
+end
+U -> S : registrarPlanEstudio(carreraId, nombre, fechaInicio, fechaFin)
+alt carrera existente y datos válidos
+  S --> U : plan de estudios registrado en la carrera
+else carrera inexistente o datos inválidos
+  S --> U : detalle del error
+end
+U -> S : registrarCuatrimestre(anio, numero, fechaInicio, fechaFin)
+alt año y número no registrados y número 1 o 2
+  S --> U : cuatrimestre registrado
+else año y número ya registrados
+  S --> U : "Ya existe el cuatrimestre para ese año y número"
+else datos inválidos
+  S --> U : detalle de campos inválidos
+end
+U -> S : registrarModuloHorario(numero, horaInicio, horaFin)
+alt hora de fin posterior a la de inicio
+  S --> U : módulo horario registrado
+else hora de fin no posterior
+  S --> U : "La hora de fin debe ser posterior a la de inicio"
+end
+U -> S : crearComision(materiaId, cuatrimestreId, profesorId)
+alt materia ACTIVA y profesor ACTIVO
+  S --> U : comisión creada
+else materia o profesor INACTIVO
+  S --> U : motivo del rechazo
+else materia, cuatrimestre o profesor inexistente
+  S --> U : detalle del error
+end
+U -> S : agregarHorario(comisionId, dia, modulosIds)
+alt día de lunes a viernes y módulos existentes
+  S --> U : horario agregado a la comisión
+else día inválido, sin módulos o módulo inexistente
+  S --> U : detalle del error
+end
+@enduml

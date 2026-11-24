@@ -1,0 +1,36 @@
+@startuml ds-modificar-materia
+skinparam shadowing false
+title DS - modificarMateria(materiaId, datos)
+actor Administrativo
+participant ":MateriaController" as C
+participant ":MateriaServiceImpl" as S
+participant ":Autorizador" as AU
+participant ":MateriaRepository" as MR
+participant ":PlanEstudioRepository" as PR
+participant "m:Materia" as M
+
+Administrativo -> C : modificar()
+C -> S : modificar(materiaId, request)
+S -> AU : exigirRol(ADMINISTRATIVO, ADMIN)
+S -> S : validar campos obligatorios
+S -> MR : findById(materiaId)
+MR --> S : m
+alt materia encontrada
+  S -> MR : existsByCodigoAndIdNot(codigo, materiaId)
+  MR --> S : boolean
+  S -> PR : findById(planEstudioId)
+  PR --> S : plan
+  alt código disponible y plan encontrado
+    S -> M : actualizar código, nombre, año,\ncuatrimestre y plan
+    S -> MR : save(m)
+    S --> C : MateriaResponse
+    C --> Administrativo : confirmación
+  else código duplicado o plan inexistente
+    S --> C : DataExistException / NotFoundException
+    C --> Administrativo : mensaje de error
+  end
+else materia inexistente
+  S --> C : NotFoundException
+  C --> Administrativo : "Materia no encontrada"
+end
+@enduml

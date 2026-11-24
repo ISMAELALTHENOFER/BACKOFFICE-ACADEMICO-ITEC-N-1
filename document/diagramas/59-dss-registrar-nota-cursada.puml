@@ -1,0 +1,20 @@
+@startuml dss-registrar-nota-cursada
+skinparam shadowing false
+title DSS - UC-12 Registrar nota de cursada
+actor "Profesor" as U
+participant ":Sistema" as S
+opt el examen no existe
+  U -> S : crearExamen(comisionId, tipo, fecha, descripcion, parcialRecuperadoId)
+  alt datos válidos (un RECUPERATORIO se vincula a un PARCIAL de la comisión)
+    S --> U : examen creado
+  else datos inválidos o asistencia de la comisión cerrada
+    S --> U : motivo del rechazo
+  end
+end
+U -> S : registrarNotas(examenId, notas)
+alt notas en 0..10 y alumnos habilitados
+  S --> U : notas registradas y promedios recalculados
+else nota fuera de rango, recuperatorio con parcial >= 6 o nota ya existente
+  S --> U : rechazo por alumno con su motivo
+end
+@enduml

@@ -1,0 +1,14 @@
+@startuml dss-modificar-nota
+skinparam shadowing false
+title DSS - UC-14 Modificar nota
+actor "Profesor" as U
+participant ":Sistema" as S
+U -> S : modificarNota(notaId, valor)
+alt profesor de la comisión, valor 0..10 y cursada o acta abierta
+  S --> U : nota modificada y cambio auditado
+else valor fuera de rango
+  S --> U : "Nota fuera de rango"
+else no es el profesor de la comisión, o acta o asistencia cerrada
+  S --> U : "Operación no permitida"
+end
+@enduml

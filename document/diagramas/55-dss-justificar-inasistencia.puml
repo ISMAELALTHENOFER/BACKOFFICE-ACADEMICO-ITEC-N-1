@@ -1,0 +1,14 @@
+@startuml dss-justificar-inasistencia
+skinparam shadowing false
+title DSS - UC-10 Justificar inasistencia
+actor "Profesor / Administrativo" as U
+participant ":Sistema" as S
+U -> S : justificarInasistencia(asistenciaId, motivo, certificado)
+alt motivo informado, asistencia AUSENTE y asistencia de la comisión abierta
+  S --> U : inasistencia JUSTIFICADA y porcentaje recalculado
+else motivo vacío
+  S --> U : "Debe indicar el motivo"
+else profesor que no es el de la comisión o asistencia cerrada
+  S --> U : "Operación no permitida"
+end
+@enduml

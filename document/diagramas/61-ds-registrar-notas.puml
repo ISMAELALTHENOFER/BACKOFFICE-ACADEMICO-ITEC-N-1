@@ -1,0 +1,44 @@
+@startuml ds-registrar-notas
+skinparam shadowing false
+title DS - registrarNotas(examenId, notas)
+actor Profesor
+participant ":NotaController" as C
+participant ":NotaServiceImpl" as S
+participant ":ExamenRepository" as ER
+participant ":Autorizador" as AU
+participant ":AlumnoInscriptoRepository" as IR
+participant ":NotaRepository" as NR
+participant ":CalculadoraCondicion" as CC
+
+Profesor -> C : guardar()
+loop por cada (inscriptoId, valor) de notas
+  C -> S : registrar(inscriptoId, examenId, valor)
+  S -> ER : findById(examenId)
+  ER --> S : examen (comisión, tipo, recuperaA)
+  S -> AU : exigirProfesorDeComision(comisionId)
+  S -> IR : findById(inscriptoId)
+  IR --> S : inscripto
+  S -> S : validar valor 0..10 con un decimal, inscripto EN_CURSO y asistencia abierta
+  S -> NR : findByInscriptoAndExamen(inscriptoId, examenId)
+  NR --> S : Optional<Nota>
+  opt tipo = RECUPERATORIO
+    S -> NR : findByInscriptoAndExamen(inscriptoId, recuperaA.id)
+    NR --> S : nota del parcial
+    S -> S : validar nota del parcial < 6
+  end
+  alt nota válida y sin nota previa
+    create participant "n:Nota" as N
+    S -> N : new Nota(inscripto, examen, valor)
+    S -> NR : save(n)
+    S -> NR : findByInscripto(inscriptoId)
+    NR --> S : notas
+    S -> CC : promedio(notas)
+    CC --> S : promedio
+    S -> IR : actualizarPromedio(inscriptoId, promedio)
+    S --> C : n
+  else valor fuera de rango, alumno no habilitado o nota existente
+    S --> C : ValidacionException(detalle)
+  end
+end
+C --> Profesor : notas registradas y rechazos con su motivo
+@enduml

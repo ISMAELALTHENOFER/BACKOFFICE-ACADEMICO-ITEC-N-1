@@ -1,0 +1,14 @@
+@startuml ds-cerrar-sesion
+skinparam shadowing false
+title DS - cerrarSesion()
+actor Usuario
+participant ":AuthController" as C
+participant ":AuthServiceImpl" as A
+participant ":Sesion" as SE
+
+Usuario -> C : cerrarSesion()
+C -> A : logout()
+A -> SE : cerrar()
+A --> C : ok
+C --> Usuario : pantalla de inicio de sesión
+@enduml
